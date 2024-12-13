@@ -174,10 +174,20 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
+		var functionToolCalls []FunctionToolCall
+		for _, toolCall := range res.Choices[0].Message.ToolCalls {
+			if toolCall.Type == `function` {
+				functionToolCalls = append(functionToolCalls, FunctionToolCall{
+					Name:      toolCall.Function.Name,
+					Arguments: toolCall.Function.Arguments,
+				})
+			}
+		}
 		return ZhimaChatCompletionResponse{
-			Result:          res.Choices[0].Message.Content,
-			PromptToken:     res.Usage.PromptTokens,
-			CompletionToken: res.Usage.CompletionTokens,
+			Result:            res.Choices[0].Message.Content,
+			FunctionToolCalls: functionToolCalls,
+			PromptToken:       res.Usage.PromptTokens,
+			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
 	case "azure":
 		client := azure.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.APIKey, a.meta.Model)
