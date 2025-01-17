@@ -124,7 +124,7 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 		tokenManager := common.GetTokenManagerInstance()
 		accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
 		if err != nil {
-			return nil, err
+			return ChatCompletionResponse{}, err
 		}
 		url = c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
 		params = []common.Param{
