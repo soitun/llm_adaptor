@@ -12,10 +12,11 @@ import (
 )
 
 type Client struct {
-	EndPoint  string
-	APIKey    string
-	SecretKey string
-	Model     string
+	EndPoint   string
+	APIKey     string
+	SecretKey  string
+	Model      string
+	ApiVersion string
 }
 
 var modelToUri = map[string]string{
@@ -41,11 +42,20 @@ var modelToUri = map[string]string{
 }
 
 func NewClient(APIKey, SecretKey, Model string) *Client {
+	if SecretKey == "" {
+		return &Client{
+			EndPoint:   "https://qianfan.baidubce.com",
+			APIKey:     APIKey,
+			Model:      Model,
+			ApiVersion: "v2",
+		}
+	}
 	return &Client{
-		EndPoint:  "https://aip.baidubce.com",
-		APIKey:    APIKey,
-		SecretKey: SecretKey,
-		Model:     Model,
+		EndPoint:   "https://aip.baidubce.com",
+		APIKey:     APIKey,
+		SecretKey:  SecretKey,
+		Model:      Model,
+		ApiVersion: "v1",
 	}
 }
 
@@ -104,12 +114,18 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 	if err != nil {
 		return ChatCompletionResponse{}, err
 	}
-
+	var headers = make([]common.Header, 0)
 	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
 	params := []common.Param{
 		{Key: "access_token", Value: accessToken},
 	}
-	responseRaw, err := common.HttpPost(url, nil, params, req)
+	if c.ApiVersion == "v2" {
+		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
+		headers = []common.Header{
+			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	}
+	responseRaw, err := common.HttpPost(url, headers, params, req)
 	if err != nil {
 		return ChatCompletionResponse{}, err
 	}
@@ -148,14 +164,20 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 	if err != nil {
 		return nil, err
 	}
-
+	var headers = make([]common.Header, 0)
 	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
 	params := []common.Param{
 		{Key: "access_token", Value: accessToken},
 	}
+	if c.ApiVersion == "v2" {
+		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
+		headers = []common.Header{
+			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	}
 
 	req.Stream = true
-	responseRaw, err := common.HttpStreamPost(url, nil, params, req)
+	responseRaw, err := common.HttpStreamPost(url, headers, params, req)
 	if err != nil {
 		return nil, err
 	}
