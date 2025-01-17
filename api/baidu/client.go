@@ -109,20 +109,26 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 		return ChatCompletionResponse{}, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
 	}
 
-	tokenManager := common.GetTokenManagerInstance()
-	accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
-	if err != nil {
-		return ChatCompletionResponse{}, err
-	}
-	var headers = make([]common.Header, 0)
-	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
-	params := []common.Param{
-		{Key: "access_token", Value: accessToken},
-	}
+	var (
+		headers = make([]common.Header, 0)
+		params  = make([]common.Param, 0)
+		url     string
+	)
+
 	if c.ApiVersion == "v2" {
 		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
 		headers = []common.Header{
 			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	} else {
+		tokenManager := common.GetTokenManagerInstance()
+		accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
+		if err != nil {
+			return nil, err
+		}
+		url = c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
+		params = []common.Param{
+			{Key: "access_token", Value: accessToken},
 		}
 	}
 	responseRaw, err := common.HttpPost(url, headers, params, req)
@@ -158,21 +164,26 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
 	}
+	var (
+		headers = make([]common.Header, 0)
+		params  = make([]common.Param, 0)
+		url     string
+	)
 
-	tokenManager := common.GetTokenManagerInstance()
-	accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
-	if err != nil {
-		return nil, err
-	}
-	var headers = make([]common.Header, 0)
-	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
-	params := []common.Param{
-		{Key: "access_token", Value: accessToken},
-	}
 	if c.ApiVersion == "v2" {
 		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
 		headers = []common.Header{
 			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	} else {
+		tokenManager := common.GetTokenManagerInstance()
+		accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
+		if err != nil {
+			return nil, err
+		}
+		url = c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
+		params = []common.Param{
+			{Key: "access_token", Value: accessToken},
 		}
 	}
 
