@@ -28,6 +28,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"github.com/zhimaAi/llm_adaptor/api/zhipu"
+	"github.com/zhimaAi/llm_adaptor/define"
 	"regexp"
 	"strings"
 )
@@ -47,6 +48,7 @@ type ZhimaChatCompletionRequest struct {
 	MaxToken      int                          `json:"max_token,omitempty"`
 	Temperature   float64                      `json:"temperature,omitempty"`
 	FunctionTools []FunctionTool               `json:"function_tools"`
+	Tools         []FunctionTool               `json:"tools"`
 }
 type FunctionTool struct {
 	Name        string     `json:"name"`
@@ -247,13 +249,30 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			}
 		}
 		var functions []baidu.Function
+		var tools []interface{}
 		if len(req.FunctionTools) > 0 {
-			for _, v := range req.FunctionTools {
-				functions = append(functions, baidu.Function{
-					Description: v.Description,
-					Name:        v.Name,
-					Parameters:  v.Parameters,
-				})
+			if client.ApiVersion == define.ApiVersionV2 {
+				if check := client.CheckModelUse(len(req.FunctionTools) > 0); !check {
+					return ZhimaChatCompletionResponse{}, errors.New("request model are not support")
+				}
+				for _, v := range req.FunctionTools {
+					tools = append(tools, map[string]interface{}{
+						`type`: `function`,
+						`function`: map[string]interface{}{
+							`name`:        v.Name,
+							`description`: v.Description,
+							`parameters`:  v.Parameters,
+						},
+					})
+				}
+			} else {
+				for _, v := range req.FunctionTools {
+					functions = append(functions, baidu.Function{
+						Description: v.Description,
+						Name:        v.Name,
+						Parameters:  v.Parameters,
+					})
+				}
 			}
 		}
 		req := baidu.ChatCompletionRequest{
@@ -264,13 +283,26 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			System:          system,
 			MaxOutputTokens: req.MaxToken,
 			Functions:       functions,
+			Tools:           tools,
 		}
 		res, err := client.CreateChatCompletion(req)
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
 		var functionToolCalls []FunctionToolCall
-		if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
+		if client.ApiVersion == define.ApiVersionV2 && len(res.Choices) > 0 {
+			res.Result = res.Choices[0].Message.Content
+			if len(tools) > 0 && res.Result == "" {
+				for _, toolCall := range res.Choices[0].Message.ToolCalls {
+					if toolCall.Type == `function` {
+						functionToolCalls = append(functionToolCalls, FunctionToolCall{
+							Name:      toolCall.Function.Name,
+							Arguments: toolCall.Function.Arguments,
+						})
+					}
+				}
+			}
+		} else if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
 			arguments := make(map[string]string)
 			err := json.Unmarshal([]byte(res.FunctionCall.Arguments), &arguments)
 			if err != nil {

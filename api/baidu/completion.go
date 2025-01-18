@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zhimaAi/llm_adaptor/common"
+	"github.com/zhimaAi/llm_adaptor/define"
 	"io"
+	"strings"
 )
 
 type ChatCompletionMessage struct {
@@ -32,6 +34,7 @@ type ChatCompletionRequest struct {
 	ResponseFormat  string                  `json:"response_format,omitempty"`
 	UserId          string                  `json:"user_id,omitempty"`
 	Functions       []Function              `json:"functions,omitempty"`
+	Tools           []interface{}           `json:"tools,omitempty"`
 }
 type Function struct {
 	Name        string      `json:"name"`
@@ -40,27 +43,39 @@ type Function struct {
 }
 
 type ChatCompletionResponse struct {
-	ID               string       `json:"id"`
-	Object           string       `json:"object"`
-	Created          int64        `json:"created"`
-	IsTruncated      bool         `json:"is_truncated"`
-	NeedClearHistory bool         `json:"need_clear_history"`
-	FinishReason     string       `json:"finish_reason"`
-	Usage            Usage        `json:"usage"`
-	Result           string       `json:"result"`
-	FunctionCall     FunctionCall `json:"function_call"`
+	ID               string                                 `json:"id"`
+	Object           string                                 `json:"object"`
+	Created          int64                                  `json:"created"`
+	IsTruncated      bool                                   `json:"is_truncated"`
+	NeedClearHistory bool                                   `json:"need_clear_history"`
+	FinishReason     string                                 `json:"finish_reason"`
+	Usage            Usage                                  `json:"usage"`
+	Result           string                                 `json:"result"`
+	FunctionCall     FunctionCall                           `json:"function_call"`
+	Choices          []define.CommonChatCompletionChoiceRes `json:"choices"`
 }
+
+type ChatCompletionChoice struct {
+	Message ChatCompletionResponseMessage `json:"message,omitempty"`
+	Delta   ChatCompletionResponseMessage `json:"delta,omitempty"`
+}
+type ChatCompletionResponseMessage struct {
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content"`
+}
+
 type ChatCompletionStreamResponse struct {
-	ID               string       `json:"id"`
-	Object           string       `json:"object"`
-	Created          int64        `json:"created"`
-	IsTruncated      bool         `json:"is_truncated"`
-	IsEnd            bool         `json:"is_end"`
-	NeedClearHistory bool         `json:"need_clear_history"`
-	FinishReason     string       `json:"finish_reason"`
-	Usage            Usage        `json:"usage"`
-	Result           string       `json:"result"`
-	FunctionCall     FunctionCall `json:"function_call"`
+	ID               string                                 `json:"id"`
+	Object           string                                 `json:"object"`
+	Created          int64                                  `json:"created"`
+	IsTruncated      bool                                   `json:"is_truncated"`
+	IsEnd            bool                                   `json:"is_end"`
+	NeedClearHistory bool                                   `json:"need_clear_history"`
+	FinishReason     string                                 `json:"finish_reason"`
+	Usage            Usage                                  `json:"usage"`
+	Result           string                                 `json:"result"`
+	FunctionCall     FunctionCall                           `json:"function_call"`
+	Choices          []define.CommonChatCompletionChoiceRes `json:"choices"`
 }
 
 type FunctionCall struct {
@@ -122,6 +137,10 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 		noPrefixLine := bytes.TrimPrefix(noSpaceLine, headerData)
 
 		var response ChatCompletionStreamResponse
+		if strings.TrimSpace(string(noPrefixLine)) == "[DONE]" {
+			c.StreamReader.IsFinished = true
+			return *new(ChatCompletionStreamResponse), io.EOF
+		}
 		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr

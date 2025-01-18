@@ -27,6 +27,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"github.com/zhimaAi/llm_adaptor/api/zhipu"
+	"github.com/zhimaAi/llm_adaptor/define"
 )
 
 type ZhimaStreamResult interface {
@@ -182,13 +183,30 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 
 		var functions []baidu.Function
+		var tools []interface{}
 		if len(req.FunctionTools) > 0 {
-			for _, v := range req.FunctionTools {
-				functions = append(functions, baidu.Function{
-					Name:        v.Name,
-					Description: v.Description,
-					Parameters:  v.Parameters,
-				})
+			if client.ApiVersion == define.ApiVersionV2 {
+				if check := client.CheckModelUse(len(req.FunctionTools) > 0); !check {
+					return &ZhimaChatCompletionStreamResponse{}, errors.New("request model are not support")
+				}
+				for _, v := range req.FunctionTools {
+					tools = append(tools, map[string]interface{}{
+						`type`: `function`,
+						`function`: map[string]interface{}{
+							`name`:        v.Name,
+							`description`: v.Description,
+							`parameters`:  v.Parameters,
+						},
+					})
+				}
+			} else {
+				for _, v := range req.FunctionTools {
+					functions = append(functions, baidu.Function{
+						Description: v.Description,
+						Name:        v.Name,
+						Parameters:  v.Parameters,
+					})
+				}
 			}
 		}
 
@@ -200,6 +218,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			System:          system,
 			MaxOutputTokens: req.MaxToken,
 			Functions:       functions,
+			Tools:           tools,
 		}
 		stream, err := client.CreateChatCompletionStream(req)
 		if err != nil {

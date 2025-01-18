@@ -20,7 +20,15 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		return ZhimaChatCompletionResponse{}, err
 	}
 	var functionToolCalls []FunctionToolCall
-	if len(res.FunctionCall.Name) > 0 || len(res.FunctionCall.Arguments) > 0 {
+	if len(res.Choices) > 0 {
+		res.Result = res.Choices[0].Delta.Content
+		for _, toolCall := range res.Choices[0].Delta.ToolCalls {
+			functionToolCalls = append(functionToolCalls, FunctionToolCall{
+				Name:      toolCall.Function.Name,
+				Arguments: toolCall.Function.Arguments,
+			})
+		}
+	} else if len(res.FunctionCall.Name) > 0 || len(res.FunctionCall.Arguments) > 0 {
 		functionToolCalls = append(functionToolCalls, FunctionToolCall{
 			Name:      res.FunctionCall.Name,
 			Arguments: res.FunctionCall.Arguments,
