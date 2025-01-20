@@ -11,7 +11,7 @@ func testChatCompletion(Meta adaptor.Meta) {
 	client := &adaptor.Adaptor{}
 	client.Init(Meta)
 	req := adaptor.ZhimaChatCompletionRequest{
-		Messages:    []adaptor.ZhimaChatCompletionMessage{{Role: "user", Content: "你好"}},
+		Messages:    []adaptor.ZhimaChatCompletionMessage{{Role: "user", Content: "介绍下自己"}},
 		Temperature: 0.1,
 		MaxToken:    10,
 	}
@@ -35,5 +35,14 @@ func TestMinimaxiChatCompletion(t *testing.T) {
 		Corp:   "minimax",
 		Model:  `abab6.5s-chat`,
 		APIKey: os.Getenv(`MINIMAX_KEY`),
+	})
+}
+func TestSiliconFlowChatCompletion(t *testing.T) {
+	testChatCompletion(adaptor.Meta{
+		EndPoint:   `https://api.siliconflow.cn`,
+		Corp:       "siliconflow",
+		APIVersion: "v1",
+		Model:      `Qwen/Qwen2.5-72B-Instruct`,
+		APIKey:     os.Getenv(`SILICONFLOW_KEY`),
 	})
 }

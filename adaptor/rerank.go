@@ -3,10 +3,10 @@
 package adaptor
 
 import (
-	"fmt"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
 	"github.com/zhimaAi/llm_adaptor/api/cohere"
 	"github.com/zhimaAi/llm_adaptor/api/jina"
+	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"sort"
 
@@ -26,11 +26,13 @@ type RerankData struct {
 	RelevanceScore float64 `json:"relevance_score"`
 }
 type ZhimaRerankResp struct {
-	Data []*RerankData `json:"data"`
+	Data        []*RerankData `json:"data"`
+	InputToken  int           `json:"input_token"`
+	OutputToken int           `json:"output_token"`
 }
 
-func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) ([]msql.Params, error) {
-	data := make([]RerankData, 0)
+func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) {
+	zhimaRes := ZhimaRerankResp{}
 	switch a.meta.Corp {
 	case "baai":
 		client := baai.NewClient(a.meta.EndPoint, a.meta.Model, a.meta.APIKey)
@@ -42,10 +44,10 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) ([]msql.Params, error) {
 		}
 		res, err := client.CreateRerank(req)
 		if err != nil || len(res.Results) <= 0 {
-			return nil, err
+			return ZhimaRerankResp{}, err
 		}
 		for _, item := range res.Results {
-			data = append(data, RerankData{
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
 				Index:          item.Index,
 				RelevanceScore: item.RelevanceScore,
 			})
@@ -60,10 +62,10 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) ([]msql.Params, error) {
 		}
 		res, err := client.ReRank(req)
 		if err != nil || len(res.Results) <= 0 {
-			return nil, err
+			return ZhimaRerankResp{}, err
 		}
 		for _, item := range res.Results {
-			data = append(data, RerankData{
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
 				Index:          item.Index,
 				RelevanceScore: item.RelevanceScore,
 			})
@@ -78,10 +80,10 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) ([]msql.Params, error) {
 		}
 		res, err := client.ReRank(req)
 		if err != nil {
-			return nil, err
+			return ZhimaRerankResp{}, err
 		}
 		for _, item := range res.Results {
-			data = append(data, RerankData{
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
 				Index:          item.Index,
 				RelevanceScore: item.RelevanceScore,
 			})
@@ -96,23 +98,44 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) ([]msql.Params, error) {
 		}
 		res, err := client.CreateRerank(req)
 		if err != nil {
-			return nil, err
+			return ZhimaRerankResp{}, err
 		}
 		for _, item := range res.Results {
-			data = append(data, RerankData{
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
+				Index:          item.Index,
+				RelevanceScore: item.RelevanceScore,
+			})
+		}
+	case "siliconflow":
+		client := siliconflow.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.Model)
+		req := &siliconflow.CreateRerankReq{
+			Model:     a.meta.Model,
+			Query:     params.Query,
+			Documents: params.Passages,
+			TopK:      params.TopK,
+		}
+		res, err := client.CreateRerank(req)
+		if err != nil || len(res.Results) <= 0 {
+			return ZhimaRerankResp{}, err
+		}
+		zhimaRes.InputToken = res.Meta.Tokens.InputTokens
+		zhimaRes.OutputToken = res.Meta.Tokens.OutputTokens
+		for _, item := range res.Results {
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
 				Index:          item.Index,
 				RelevanceScore: item.RelevanceScore,
 			})
 		}
 	}
-	return rerankData(params, data), nil
+	rerankData(params, zhimaRes.Data)
+	return zhimaRes, nil
 }
 
-func rerankData(req *ZhimaRerankReq, rerankData []RerankData) []msql.Params {
+func rerankData(req *ZhimaRerankReq, rerankData []*RerankData) []*RerankData {
+	newData := make([]*RerankData, 0)
 	if len(rerankData) <= 0 {
-		return req.Data
+		return newData
 	}
-	newData := make([]msql.Params, 0)
 	sort.Slice(rerankData, func(i, j int) bool {
 		return rerankData[i].RelevanceScore > rerankData[j].RelevanceScore
 	})
@@ -121,13 +144,13 @@ func rerankData(req *ZhimaRerankReq, rerankData []RerankData) []msql.Params {
 		if req.TopK > 0 && len(newData) >= req.TopK {
 			continue
 		}
-		if req.Data[item.Index] != nil {
-			req.Data[item.Index]["relevance_score"] = fmt.Sprintf("%v", item.RelevanceScore)
-			newData = append(newData, req.Data[item.Index])
+		if req.Passages[item.Index] != "" {
+			newData = append(newData, &RerankData{
+				Index:          item.Index,
+				Text:           req.Passages[item.Index],
+				RelevanceScore: item.RelevanceScore,
+			})
 		}
-	}
-	if len(newData) == 0 {
-		return req.Data
 	}
 	return newData
 }

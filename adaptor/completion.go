@@ -24,6 +24,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/ollama"
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	openaiagent "github.com/zhimaAi/llm_adaptor/api/openaiAgent"
+	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/spark"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
@@ -126,7 +127,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
-	case "ali", "baichuan", "moonshot", "lingyiwanwu", "deepseek", "zhipu", "minimax", "openaiAgent":
+	case "ali", "baichuan", "moonshot", "lingyiwanwu", "deepseek", "zhipu", "minimax", "openaiAgent", "siliconflow":
 		var client *openai.Client
 		if a.meta.Corp == "ali" {
 			client = ali.NewClient(a.meta.APIKey).OpenAIClient
@@ -144,6 +145,8 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			client = minimax.NewClient(a.meta.APIKey).OpenAIClient
 		} else if a.meta.Corp == "openaiAgent" {
 			client = openaiagent.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
+		} else if a.meta.Corp == "siliconflow" {
+			client = siliconflow.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
 		}
 		var messages []openai.ChatCompletionRequestMessage
 		for _, v := range req.Messages {
