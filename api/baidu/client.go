@@ -10,6 +10,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/common"
 	"github.com/zhimaAi/llm_adaptor/define"
 	"io"
+	"strings"
 )
 
 type Client struct {
@@ -66,6 +67,7 @@ var modelFunctionsV2 = map[string]bool{
 
 func NewClient(APIKey, SecretKey, Model string) *Client {
 	if SecretKey == "" {
+		Model = strings.ToLower(Model)
 		return &Client{
 			EndPoint:   "https://qianfan.baidubce.com",
 			APIKey:     APIKey,

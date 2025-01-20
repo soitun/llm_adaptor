@@ -211,7 +211,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 
 		req := baidu.ChatCompletionRequest{
-			Model:           a.meta.Model,
+			Model:           client.Model,
 			Messages:        messages,
 			Stream:          true,
 			Temperature:     req.Temperature,
