@@ -146,11 +146,6 @@ func rerankData(req *ZhimaRerankReq, rerankData []*RerankData) []*RerankData {
 		}
 		if req.Passages[item.Index] != "" {
 			rerankData[key].Text = req.Passages[item.Index]
-			newData = append(rerankData, &RerankData{
-				Index:          item.Index,
-				Text:           req.Passages[item.Index],
-				RelevanceScore: item.RelevanceScore,
-			})
 		}
 	}
 	return newData
