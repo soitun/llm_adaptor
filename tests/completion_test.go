@@ -43,6 +43,6 @@ func TestSiliconFlowChatCompletion(t *testing.T) {
 		EndPoint:   `https://api.siliconflow.cn`,
 		APIVersion: "v1",
 		Model:      `Qwen/Qwen2.5-72B-Instruct`,
-		APIKey:     os.Getenv(`SILICONFLOW_KEY`),
+		APIKey:     `sk-hhflenfvkprxiwhamjeyglssxwnbgelpjxuiktmqacbdjhlb`,
 	})
 }

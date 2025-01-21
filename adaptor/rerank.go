@@ -139,13 +139,14 @@ func rerankData(req *ZhimaRerankReq, rerankData []*RerankData) []*RerankData {
 	sort.Slice(rerankData, func(i, j int) bool {
 		return rerankData[i].RelevanceScore > rerankData[j].RelevanceScore
 	})
-	for _, item := range rerankData {
+	for key, item := range rerankData {
 		// topN filter
 		if req.TopK > 0 && len(newData) >= req.TopK {
 			continue
 		}
 		if req.Passages[item.Index] != "" {
-			newData = append(newData, &RerankData{
+			rerankData[key].Text = req.Passages[item.Index]
+			newData = append(rerankData, &RerankData{
 				Index:          item.Index,
 				Text:           req.Passages[item.Index],
 				RelevanceScore: item.RelevanceScore,
