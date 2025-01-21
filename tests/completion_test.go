@@ -39,8 +39,8 @@ func TestMinimaxiChatCompletion(t *testing.T) {
 }
 func TestSiliconFlowChatCompletion(t *testing.T) {
 	testChatCompletion(adaptor.Meta{
-		EndPoint:   `https://api.siliconflow.cn`,
 		Corp:       "siliconflow",
+		EndPoint:   `https://api.siliconflow.cn`,
 		APIVersion: "v1",
 		Model:      `Qwen/Qwen2.5-72B-Instruct`,
 		APIKey:     os.Getenv(`SILICONFLOW_KEY`),
