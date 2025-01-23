@@ -8,14 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zhimaAi/llm_adaptor/common"
+	"github.com/zhimaAi/llm_adaptor/define"
 	"io"
+	"strings"
 )
 
 type Client struct {
-	EndPoint  string
-	APIKey    string
-	SecretKey string
-	Model     string
+	EndPoint   string
+	APIKey     string
+	SecretKey  string
+	Model      string
+	ApiVersion string
 }
 
 var modelToUri = map[string]string{
@@ -40,12 +43,44 @@ var modelToUri = map[string]string{
 	"ERNIE-Lite-8K-0308":        "ernie-lite-8k",
 }
 
+var modelFunctionsV2 = map[string]bool{
+	"ernie-4.0-8k-latest":        true,
+	"ernie-4.0-8k-preview":       true,
+	"ernie-4.0-8k":               true,
+	"ernie-4.0-turbo-8k-latest":  true,
+	"ernie-4.0-turbo-8k-preview": true,
+	"ernie-4.0-turbo-8k":         true,
+	"ernie-4.0-turbo-128k":       true,
+	"ernie-3.5-8k-preview":       true,
+	"ernie-3.5-8k":               true,
+	"ernie-3.5-128k":             true,
+	"ernie-speed-8k":             false,
+	"ernie-speed-128k":           false,
+	"ernie-speed-pro-128k":       false,
+	"ernie-lite-8k":              false,
+	"ernie-lite-pro-128k":        true,
+	"ernie-tiny-8k":              false,
+	"ernie-char-8k":              false,
+	"ernie-char-fiction-8k":      false,
+	"ernie-novel-8k":             false,
+}
+
 func NewClient(APIKey, SecretKey, Model string) *Client {
+	if SecretKey == "" {
+		Model = strings.ToLower(Model)
+		return &Client{
+			EndPoint:   "https://qianfan.baidubce.com",
+			APIKey:     APIKey,
+			Model:      Model,
+			ApiVersion: define.ApiVersionV2,
+		}
+	}
 	return &Client{
-		EndPoint:  "https://aip.baidubce.com",
-		APIKey:    APIKey,
-		SecretKey: SecretKey,
-		Model:     Model,
+		EndPoint:   "https://aip.baidubce.com",
+		APIKey:     APIKey,
+		SecretKey:  SecretKey,
+		Model:      Model,
+		ApiVersion: define.ApiVersionV1,
 	}
 }
 
@@ -91,25 +126,50 @@ func (c *Client) CreateEmbeddings(req EmbeddingRequest) (EmbeddingResponse, erro
 
 	return result, err
 }
+func (c *Client) CheckModelUse(needFancCall bool) bool {
+	switch c.ApiVersion {
+	case define.ApiVersionV2:
+		fancCall, use := modelFunctionsV2[c.Model]
+		if !use {
+			return false
+		}
+		if !needFancCall {
+			return true
+		}
+		return fancCall
+	}
+	return true
+}
 
 func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletionResponse, error) {
+	var (
+		headers = make([]common.Header, 0)
+		params  = make([]common.Param, 0)
+		url     string
+	)
 
-	uri, ok := modelToUri[c.Model]
-	if !ok {
-		return ChatCompletionResponse{}, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
-	}
+	if c.ApiVersion == define.ApiVersionV2 {
+		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
+		headers = []common.Header{
+			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	} else {
+		uri, ok := modelToUri[c.Model]
+		if !ok {
+			return ChatCompletionResponse{}, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
+		}
 
-	tokenManager := common.GetTokenManagerInstance()
-	accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
-	if err != nil {
-		return ChatCompletionResponse{}, err
+		tokenManager := common.GetTokenManagerInstance()
+		accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
+		if err != nil {
+			return ChatCompletionResponse{}, err
+		}
+		url = c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
+		params = []common.Param{
+			{Key: "access_token", Value: accessToken},
+		}
 	}
-
-	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
-	params := []common.Param{
-		{Key: "access_token", Value: accessToken},
-	}
-	responseRaw, err := common.HttpPost(url, nil, params, req)
+	responseRaw, err := common.HttpPost(url, headers, params, req)
 	if err != nil {
 		return ChatCompletionResponse{}, err
 	}
@@ -138,24 +198,35 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 
 func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCompletionStream, error) {
 
-	uri, ok := modelToUri[c.Model]
-	if !ok {
-		return nil, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
-	}
+	var (
+		headers = make([]common.Header, 0)
+		params  = make([]common.Param, 0)
+		url     string
+	)
 
-	tokenManager := common.GetTokenManagerInstance()
-	accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
-	if err != nil {
-		return nil, err
-	}
-
-	url := c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
-	params := []common.Param{
-		{Key: "access_token", Value: accessToken},
+	if c.ApiVersion == define.ApiVersionV2 {
+		url = c.EndPoint + "/" + c.ApiVersion + "/chat/completions"
+		headers = []common.Header{
+			{Key: "Authorization", Value: "Bearer " + c.APIKey},
+		}
+	} else {
+		uri, ok := modelToUri[c.Model]
+		if !ok {
+			return nil, errors.New(fmt.Sprintf("error, Unsupported model: %s", c.Model))
+		}
+		tokenManager := common.GetTokenManagerInstance()
+		accessToken, err := tokenManager.GetBaiduAccessToken(c.EndPoint, c.APIKey, c.SecretKey)
+		if err != nil {
+			return nil, err
+		}
+		url = c.EndPoint + "/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/" + uri
+		params = []common.Param{
+			{Key: "access_token", Value: accessToken},
+		}
 	}
 
 	req.Stream = true
-	responseRaw, err := common.HttpStreamPost(url, nil, params, req)
+	responseRaw, err := common.HttpStreamPost(url, headers, params, req)
 	if err != nil {
 		return nil, err
 	}
