@@ -62,7 +62,6 @@ func HttpStreamPost(url string, headers []Header, params []Param, request any) (
 		Header{Key: "Cache-Control", Value: "no-cache"},
 		Header{Key: "Connection", Value: "keep-alive"},
 	)
-
 	return HttpPost(url, newHeaders, params, request)
 }
 
