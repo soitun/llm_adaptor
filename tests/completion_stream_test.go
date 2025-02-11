@@ -51,3 +51,13 @@ func TestMinimaxiChatCompletionStream(t *testing.T) {
 		APIKey: os.Getenv(`MINIMAX_KEY`),
 	})
 }
+
+func TestSiliconFlowChatCompletionStream(t *testing.T) {
+	testChatCompletionStream(adaptor.Meta{
+		EndPoint:   `https://api.siliconflow.cn`,
+		Corp:       "siliconflow",
+		APIVersion: "v1",
+		Model:      `Qwen/Qwen2.5-72B-Instruct`,
+		APIKey:     os.Getenv(`SILICONFLOW_KEY`),
+	})
+}

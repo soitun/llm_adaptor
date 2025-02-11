@@ -16,6 +16,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/ollama"
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	openaiagent "github.com/zhimaAi/llm_adaptor/api/openaiAgent"
+	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev2"
 	"github.com/zhimaAi/llm_adaptor/api/voyage"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
@@ -267,6 +268,21 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}
 		return ZhimaEmbeddingResponse{
 			Result: res.Data[0].Embedding,
+		}, nil
+	case "siliconflow":
+		client := siliconflow.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion)
+		r := siliconflow.EmbeddingRequest{
+			Model: a.meta.Model,
+			Input: []string{req.Input},
+		}
+		res, err := client.CreateEmbeddings(r)
+		if err != nil {
+			return ZhimaEmbeddingResponse{}, err
+		}
+		return ZhimaEmbeddingResponse{
+			Result:          res.Data[0].Embedding,
+			PromptToken:     res.Usage.PromptTokens,
+			CompletionToken: res.Usage.TotalTokens - res.Usage.PromptTokens,
 		}, nil
 	}
 	return ZhimaEmbeddingResponse{}, nil
