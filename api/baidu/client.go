@@ -63,6 +63,8 @@ var modelFunctionsV2 = map[string]bool{
 	"ernie-char-8k":              false,
 	"ernie-char-fiction-8k":      false,
 	"ernie-novel-8k":             false,
+	"deepseek-v3":                true,
+	"deepseek-r1":                false,
 }
 
 func NewClient(APIKey, SecretKey, Model string) *Client {
