@@ -7,6 +7,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.975
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan v1.0.975
 	github.com/volcengine/volc-sdk-golang v1.0.170
+	github.com/volcengine/volcengine-go-sdk v1.0.186
 	github.com/zhimaAi/go_tools v0.0.0-20240612094107-dd5aa8aec261
 )
 
@@ -20,6 +21,7 @@ require (
 	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/htruong/go-md2 v0.0.0-20170914203617-c69905b63f6f // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
@@ -34,4 +36,5 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
