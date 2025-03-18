@@ -182,9 +182,16 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			CompletionToken: res.Usage.TotalTokens - res.Usage.PromptTokens,
 		}, nil
 	case "doubao":
-		client := arkruntime.NewClientWithApiKey(a.meta.APIKey,
-			arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
-			arkruntime.WithRegion(a.meta.Region))
+		var client *arkruntime.Client
+		if len(a.meta.SecretKey) == 0 {
+			client = arkruntime.NewClientWithApiKey(a.meta.APIKey,
+				arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
+				arkruntime.WithRegion(a.meta.Region))
+		} else {
+			client = arkruntime.NewClientWithAkSk(a.meta.APIKey, a.meta.SecretKey,
+				arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
+				arkruntime.WithRegion(a.meta.Region))
+		}
 		res, err := client.CreateEmbeddings(context.Background(),
 			model.EmbeddingRequestStrings{
 				Input: []string{req.Input},
