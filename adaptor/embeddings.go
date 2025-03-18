@@ -3,7 +3,12 @@
 package adaptor
 
 import (
+	"context"
 	"errors"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
+	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
+	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/azure"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
@@ -17,13 +22,9 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	openaiagent "github.com/zhimaAi/llm_adaptor/api/openaiAgent"
 	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
-	"github.com/zhimaAi/llm_adaptor/api/volcenginev2"
 	"github.com/zhimaAi/llm_adaptor/api/voyage"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"github.com/zhimaAi/llm_adaptor/api/zhipu"
-
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
 )
 
 type ZhimaEmbeddingRequest struct {
@@ -181,16 +182,23 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			CompletionToken: res.Usage.TotalTokens - res.Usage.PromptTokens,
 		}, nil
 	case "doubao":
-		client := volcenginev2.NewClient(`maas-api.ml-platform-cn-beijing.volces.com`, a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
-		r := volcenginev2.EmbeddingRequest{
-			Input: []string{req.Input},
-		}
-		res, err := client.CreateEmbeddings(r)
+		client := arkruntime.NewClientWithApiKey(a.meta.APIKey,
+			arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
+			arkruntime.WithRegion(a.meta.Region))
+		res, err := client.CreateEmbeddings(context.Background(),
+			model.EmbeddingRequestStrings{
+				Input: []string{req.Input},
+				Model: a.meta.Model,
+			})
 		if err != nil {
 			return ZhimaEmbeddingResponse{}, err
 		}
+		result := make([]float64, len(res.Data[0].Embedding))
+		for idx := range res.Data[0].Embedding {
+			result[idx] = float64(res.Data[0].Embedding[idx])
+		}
 		return ZhimaEmbeddingResponse{
-			Result:          res.Data[0].Embedding,
+			Result:          result,
 			PromptToken:     res.Usage.PromptTokens,
 			CompletionToken: res.Usage.CompletionTokens,
 		}, nil
