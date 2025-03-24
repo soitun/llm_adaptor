@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
 	"strings"
+
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type ChatCompletionRequestMessage struct {
@@ -17,9 +18,10 @@ type ChatCompletionRequestMessage struct {
 	Content string `json:"content"`
 }
 type ChatCompletionResponseMessage struct {
-	Role      string     `json:"role"`
-	Content   string     `json:"content"`
-	ToolCalls []ToolCall `json:"tool_calls"`
+	Role             string     `json:"role"`
+	Content          string     `json:"content"`
+	ReasoningContent string     `json:"reasoning_content"`
+	ToolCalls        []ToolCall `json:"tool_calls"`
 }
 
 type ToolCall struct {
