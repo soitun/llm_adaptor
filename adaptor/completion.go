@@ -5,6 +5,9 @@ package adaptor
 import (
 	"encoding/json"
 	"errors"
+	"regexp"
+	"strings"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
 	"github.com/zhimaAi/go_tools/logs"
@@ -30,8 +33,6 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"github.com/zhimaAi/llm_adaptor/api/zhipu"
 	"github.com/zhimaAi/llm_adaptor/define"
-	"regexp"
-	"strings"
 )
 
 type ZhimaChatCompletionMessage struct {
@@ -68,6 +69,7 @@ type ZhimaChatCompletionResponse struct {
 	CompletionToken     int                `json:"completion_token"`
 	FunctionToolCalls   []FunctionToolCall `json:"function_tool_calls"`
 	IsValidFunctionCall bool               `json:"is_valid_function_call"`
+	ReasoningContent    string             `json:"reasoning_content"`
 }
 type FunctionToolCall struct {
 	Name      string `json:"name"`
@@ -190,6 +192,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}
 		return ZhimaChatCompletionResponse{
 			Result:            res.Choices[0].Message.Content,
+			ReasoningContent:  res.Choices[0].Message.ReasoningContent,
 			FunctionToolCalls: functionToolCalls,
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,

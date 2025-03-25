@@ -2,7 +2,9 @@
 
 package adaptor
 
-import "github.com/zhimaAi/llm_adaptor/api/openai"
+import (
+	"github.com/zhimaAi/llm_adaptor/api/openai"
+)
 
 type OpenAIStreamResult struct {
 	*openai.ChatCompletionStream
@@ -16,7 +18,7 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 
 	var promptTokens int
 	var completionTokens int
-	var result string
+	var result, reasoningContent = "", ""
 	if responseOpenAI.Usage.PromptTokens > 0 {
 		promptTokens = responseOpenAI.Usage.PromptTokens
 	}
@@ -26,6 +28,7 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	var functionToolCalls []FunctionToolCall
 	if len(responseOpenAI.Choices) > 0 {
 		result = responseOpenAI.Choices[0].Delta.Content
+		reasoningContent = responseOpenAI.Choices[0].Delta.ReasoningContent
 		// Compatible with moonlight
 		if responseOpenAI.Choices[0].Usage.PromptTokens > 0 {
 			promptTokens = responseOpenAI.Choices[0].Usage.PromptTokens
@@ -43,6 +46,7 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 
 	return ZhimaChatCompletionResponse{
 		Result:            result,
+		ReasoningContent:  reasoningContent,
 		FunctionToolCalls: functionToolCalls,
 		PromptToken:       promptTokens,
 		CompletionToken:   completionTokens,
