@@ -16,8 +16,9 @@ func (r *OllamaStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		return ZhimaChatCompletionResponse{}, err
 	}
 	return ZhimaChatCompletionResponse{
-		Result:          responseOllama.Message.Content,
-		PromptToken:     responseOllama.Metrics.PromptEvalCount,
-		CompletionToken: responseOllama.Metrics.EvalCount,
+		Result:           responseOllama.Message.Content,
+		ReasoningContent: responseOllama.Message.ReasoningContent,
+		PromptToken:      responseOllama.Metrics.PromptEvalCount,
+		CompletionToken:  responseOllama.Metrics.EvalCount,
 	}, nil
 }

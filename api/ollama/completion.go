@@ -5,17 +5,19 @@ package ollama
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
 	"time"
+
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type ImageData []byte
 
 type ChatCompletionMessage struct {
-	Role    string      `json:"role"`
-	Content string      `json:"content"`
-	Images  []ImageData `json:"images,omitempty"`
+	Role             string      `json:"role"`
+	Content          string      `json:"content"`
+	ReasoningContent string      `json:"reasoning_content"`
+	Images           []ImageData `json:"images,omitempty"`
 }
 
 type ChatCompletionRequest struct {
@@ -108,7 +110,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 			c.StreamReader.IsFinished = true
 			return *new(ChatCompletionStreamResponse), io.EOF
 		}
-		if response.Message.Content == "" {
+		if response.Message.Content == "" && response.Message.ReasoningContent == "" {
 			continue
 		}
 		return response, nil
