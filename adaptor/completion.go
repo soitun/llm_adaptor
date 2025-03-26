@@ -298,9 +298,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		var functionToolCalls []FunctionToolCall
 		if client.ApiVersion == define.ApiVersionV2 && len(res.Choices) > 0 {
 			res.Result = res.Choices[0].Message.Content
-			if len(res.Choices) > 0 {
-				res.ReasoningContent = res.Choices[0].Message.ReasoningContent
-			}
+			res.ReasoningContent = res.Choices[0].Message.ReasoningContent
 			if len(tools) > 0 && res.Result == "" {
 				for _, toolCall := range res.Choices[0].Message.ToolCalls {
 					if toolCall.Type == `function` {
