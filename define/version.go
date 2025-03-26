@@ -9,9 +9,10 @@ type (
 		Delta   ChatCompletionResponseMessage `json:"delta,omitempty"`
 	}
 	ChatCompletionResponseMessage struct {
-		Role      string     `json:"role,omitempty"`
-		Content   string     `json:"content"`
-		ToolCalls []ToolCall `json:"tool_calls,omitempty"`
+		Role             string     `json:"role,omitempty"`
+		Content          string     `json:"content"`
+		ReasoningContent string     `json:"reasoning_content"`
+		ToolCalls        []ToolCall `json:"tool_calls,omitempty"`
 	}
 	ToolCall struct {
 		Id       string   `json:"id"`

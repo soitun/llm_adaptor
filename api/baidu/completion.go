@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/common"
-	"github.com/zhimaAi/llm_adaptor/define"
 	"io"
 	"strings"
+
+	"github.com/zhimaAi/llm_adaptor/common"
+	"github.com/zhimaAi/llm_adaptor/define"
 )
 
 type ChatCompletionMessage struct {
@@ -51,6 +52,7 @@ type ChatCompletionResponse struct {
 	FinishReason     string                                 `json:"finish_reason"`
 	Usage            Usage                                  `json:"usage"`
 	Result           string                                 `json:"result"`
+	ReasoningContent string                                 `json:"reasoning_content"`
 	FunctionCall     FunctionCall                           `json:"function_call"`
 	Choices          []define.CommonChatCompletionChoiceRes `json:"choices"`
 }
@@ -74,6 +76,7 @@ type ChatCompletionStreamResponse struct {
 	FinishReason     string                                 `json:"finish_reason"`
 	Usage            Usage                                  `json:"usage"`
 	Result           string                                 `json:"result"`
+	ReasoningContent string                                 `json:"reasoning_content"`
 	FunctionCall     FunctionCall                           `json:"function_call"`
 	Choices          []define.CommonChatCompletionChoiceRes `json:"choices"`
 }

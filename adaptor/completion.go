@@ -298,6 +298,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		var functionToolCalls []FunctionToolCall
 		if client.ApiVersion == define.ApiVersionV2 && len(res.Choices) > 0 {
 			res.Result = res.Choices[0].Message.Content
+			res.ReasoningContent = res.Choices[0].Message.ReasoningContent
 			if len(tools) > 0 && res.Result == "" {
 				for _, toolCall := range res.Choices[0].Message.ToolCalls {
 					if toolCall.Type == `function` {
@@ -333,6 +334,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}
 		return ZhimaChatCompletionResponse{
 			Result:            res.Result,
+			ReasoningContent:  res.ReasoningContent,
 			FunctionToolCalls: functionToolCalls,
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
@@ -571,9 +573,10 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			return ZhimaChatCompletionResponse{}, err
 		}
 		return ZhimaChatCompletionResponse{
-			Result:          res.Message.Content,
-			PromptToken:     res.PromptEvalCount,
-			CompletionToken: res.EvalCount,
+			Result:           res.Message.Content,
+			ReasoningContent: res.Message.ReasoningContent,
+			PromptToken:      res.PromptEvalCount,
+			CompletionToken:  res.EvalCount,
 		}, nil
 	case "xinference":
 		client := xinference.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.Model)

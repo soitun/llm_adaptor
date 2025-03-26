@@ -4,10 +4,11 @@ package adaptor
 
 import (
 	"encoding/json"
-	"github.com/zhimaAi/go_tools/tool"
-	"github.com/zhimaAi/llm_adaptor/api/baidu"
 	"regexp"
 	"strings"
+
+	"github.com/zhimaAi/go_tools/tool"
+	"github.com/zhimaAi/llm_adaptor/api/baidu"
 )
 
 type BaiduStreamResult struct {
@@ -22,6 +23,7 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	var functionToolCalls []FunctionToolCall
 	if len(res.Choices) > 0 {
 		res.Result = res.Choices[0].Delta.Content
+		res.ReasoningContent = res.Choices[0].Delta.ReasoningContent
 		for _, toolCall := range res.Choices[0].Delta.ToolCalls {
 			functionToolCalls = append(functionToolCalls, FunctionToolCall{
 				Name:      toolCall.Function.Name,
@@ -59,6 +61,7 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	}
 	return ZhimaChatCompletionResponse{
 		Result:            res.Result,
+		ReasoningContent:  res.ReasoningContent,
 		FunctionToolCalls: functionToolCalls,
 		PromptToken:       res.Usage.PromptTokens,
 		CompletionToken:   res.Usage.CompletionTokens,
