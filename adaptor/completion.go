@@ -315,7 +315,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
-			for k, _ := range arguments {
+			for k := range arguments {
 				arguments[k] = ``
 			}
 			res.FunctionCall.Arguments, _ = tool.JsonEncode(arguments)

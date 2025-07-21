@@ -41,7 +41,7 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
-			for k, _ := range arguments {
+			for k := range arguments {
 				arguments[k] = ``
 			}
 			res.FunctionCall.Arguments, _ = tool.JsonEncode(arguments)

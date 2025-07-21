@@ -10,6 +10,9 @@ type Meta struct {
 	APIKey     string
 	SecretKey  string
 
+	ChoosableThinking bool //是否可选思考模式
+	EnabledThinking   bool //是否开启思考模式
+
 	Region string //for volcengine and tencent
 
 	APPID string //for spark
