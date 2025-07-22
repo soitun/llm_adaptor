@@ -259,9 +259,6 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}
 		var functions []baidu.Function
 		var tools []interface{}
-		if check := client.CheckModelUse(len(req.FunctionTools) > 0); !check {
-			return ZhimaChatCompletionResponse{}, errors.New("request model are not support")
-		}
 		if len(req.FunctionTools) > 0 {
 			if client.ApiVersion == define.ApiVersionV2 {
 				for _, v := range req.FunctionTools {

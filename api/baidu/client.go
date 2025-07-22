@@ -43,30 +43,6 @@ var modelToUri = map[string]string{
 	"ERNIE-Lite-8K-0308":        "ernie-lite-8k",
 }
 
-var modelFunctionsV2 = map[string]bool{
-	"ernie-4.0-8k-latest":        true,
-	"ernie-4.0-8k-preview":       true,
-	"ernie-4.0-8k":               true,
-	"ernie-4.0-turbo-8k-latest":  true,
-	"ernie-4.0-turbo-8k-preview": true,
-	"ernie-4.0-turbo-8k":         true,
-	"ernie-4.0-turbo-128k":       true,
-	"ernie-3.5-8k-preview":       true,
-	"ernie-3.5-8k":               true,
-	"ernie-3.5-128k":             true,
-	"ernie-speed-8k":             false,
-	"ernie-speed-128k":           false,
-	"ernie-speed-pro-128k":       false,
-	"ernie-lite-8k":              false,
-	"ernie-lite-pro-128k":        true,
-	"ernie-tiny-8k":              false,
-	"ernie-char-8k":              false,
-	"ernie-char-fiction-8k":      false,
-	"ernie-novel-8k":             false,
-	"deepseek-v3":                true,
-	"deepseek-r1":                false,
-}
-
 func NewClient(APIKey, SecretKey, Model string) *Client {
 	if SecretKey == "" {
 		Model = strings.ToLower(Model)
@@ -127,20 +103,6 @@ func (c *Client) CreateEmbeddings(req EmbeddingRequest) (EmbeddingResponse, erro
 	}
 
 	return result, err
-}
-func (c *Client) CheckModelUse(needFancCall bool) bool {
-	switch c.ApiVersion {
-	case define.ApiVersionV2:
-		fancCall, use := modelFunctionsV2[c.Model]
-		if !use {
-			return false
-		}
-		if !needFancCall {
-			return true
-		}
-		return fancCall
-	}
-	return true
 }
 
 func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletionResponse, error) {
