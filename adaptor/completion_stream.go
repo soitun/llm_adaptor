@@ -306,6 +306,13 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 		}
+		if a.meta.ChoosableThinking {
+			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
+			if a.meta.ChoosableThinking {
+				thinking.Type = openai.ThinkingTypeEnabled
+			}
+			req.Thinking = &thinking
+		}
 		stream, err := client.CreateChatCompletionStream(req)
 		if err != nil {
 			return nil, err

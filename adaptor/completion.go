@@ -431,14 +431,22 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 		}
+		if a.meta.ChoosableThinking {
+			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
+			if a.meta.ChoosableThinking {
+				thinking.Type = openai.ThinkingTypeEnabled
+			}
+			req.Thinking = &thinking
+		}
 		res, err := client.CreateChatCompletion(req)
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
 		return ZhimaChatCompletionResponse{
-			Result:          res.Choices[0].Message.Content,
-			PromptToken:     res.Usage.PromptTokens,
-			CompletionToken: res.Usage.CompletionTokens,
+			Result:           res.Choices[0].Message.Content,
+			PromptToken:      res.Usage.PromptTokens,
+			CompletionToken:  res.Usage.CompletionTokens,
+			ReasoningContent: res.Choices[0].Message.ReasoningContent,
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
