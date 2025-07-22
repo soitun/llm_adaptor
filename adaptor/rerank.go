@@ -10,7 +10,6 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/jina"
 	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
-	"net/http"
 	"sort"
 )
 
@@ -141,7 +140,7 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 			},
 		}
 		res, err := client.CreateRerank(req)
-		if err != nil || res.StatusCode != http.StatusOK {
+		if err != nil {
 			return ZhimaRerankResp{}, err
 		}
 		zhimaRes.InputToken = res.Usage.TotalTokens / 2 //没办法,输入输出个半

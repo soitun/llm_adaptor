@@ -3,6 +3,7 @@
 package ali
 
 import (
+	"errors"
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	"github.com/zhimaAi/llm_adaptor/common"
 )
@@ -61,11 +62,10 @@ type (
 		TopN            int  `json:"top_n"`
 	}
 	CreateRerankRes struct {
-		StatusCode int    `json:"status_code"`
-		RequestId  string `json:"request_id"`
-		Code       string `json:"code"`
-		Message    string `json:"message"`
-		Output     struct {
+		RequestId string `json:"request_id"`
+		Code      string `json:"code"`
+		Message   string `json:"message"`
+		Output    struct {
 			Results []Result `json:"results"`
 		} `json:"output"`
 		Usage struct {
@@ -101,5 +101,11 @@ func (c *Client) CreateRerank(req *CreateRerankReq) (*CreateRerankRes, error) {
 		return result, err
 	}
 	err = common.HttpDecodeResponse(responseRaw, &result)
+	if err != nil {
+		return result, err
+	}
+	if len(result.Code) > 0 && len(result.Output.Results) == 0 {
+		return result, errors.New(result.Message)
+	}
 	return result, err
 }
