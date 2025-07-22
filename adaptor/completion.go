@@ -174,7 +174,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
 		}
-		if a.meta.Corp == `ali` && a.meta.ChoosableThinking {
+		if tool.InArrayString(a.meta.Corp, []string{`ali`, `siliconflow`}) && a.meta.ChoosableThinking {
 			req.EnableThinking = &a.meta.EnabledThinking
 		}
 		if client == nil {
