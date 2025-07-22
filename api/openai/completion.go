@@ -61,6 +61,7 @@ type ChatCompletionRequest struct {
 	User             string                         `json:"user,omitempty"`
 	Tools            []interface{}                  `json:"tools"`
 	Thinking         *Thinking                      `json:"thinking,omitempty"`
+	EnableThinking   *bool                          `json:"enable_thinking,omitempty"`
 }
 
 type StreamOptions struct {

@@ -127,6 +127,9 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
 		}
+		if a.meta.Corp == `ali` && a.meta.ChoosableThinking {
+			req.EnableThinking = &a.meta.EnabledThinking
+		}
 		if client == nil {
 			return &ZhimaChatCompletionStreamResponse{}, errors.New(`corp not supported`)
 		}
@@ -308,7 +311,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		if a.meta.ChoosableThinking {
 			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
-			if a.meta.ChoosableThinking {
+			if a.meta.EnabledThinking {
 				thinking.Type = openai.ThinkingTypeEnabled
 			}
 			req.Thinking = &thinking
