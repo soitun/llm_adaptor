@@ -174,6 +174,9 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
 		}
+		if tool.InArrayString(a.meta.Corp, []string{`ali`, `siliconflow`}) && a.meta.ChoosableThinking {
+			req.EnableThinking = &a.meta.EnabledThinking
+		}
 		if client == nil {
 			return ZhimaChatCompletionResponse{}, errors.New(`corp not supported`)
 		}
@@ -256,9 +259,6 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}
 		var functions []baidu.Function
 		var tools []interface{}
-		if check := client.CheckModelUse(len(req.FunctionTools) > 0); !check {
-			return ZhimaChatCompletionResponse{}, errors.New("request model are not support")
-		}
 		if len(req.FunctionTools) > 0 {
 			if client.ApiVersion == define.ApiVersionV2 {
 				for _, v := range req.FunctionTools {
@@ -315,7 +315,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
-			for k, _ := range arguments {
+			for k := range arguments {
 				arguments[k] = ``
 			}
 			res.FunctionCall.Arguments, _ = tool.JsonEncode(arguments)
@@ -431,14 +431,22 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 		}
+		if a.meta.ChoosableThinking {
+			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
+			if a.meta.EnabledThinking {
+				thinking.Type = openai.ThinkingTypeEnabled
+			}
+			req.Thinking = &thinking
+		}
 		res, err := client.CreateChatCompletion(req)
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
 		return ZhimaChatCompletionResponse{
-			Result:          res.Choices[0].Message.Content,
-			PromptToken:     res.Usage.PromptTokens,
-			CompletionToken: res.Usage.CompletionTokens,
+			Result:           res.Choices[0].Message.Content,
+			PromptToken:      res.Usage.PromptTokens,
+			CompletionToken:  res.Usage.CompletionTokens,
+			ReasoningContent: res.Choices[0].Message.ReasoningContent,
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)

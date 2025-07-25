@@ -3,14 +3,14 @@
 package adaptor
 
 import (
+	"github.com/zhimaAi/go_tools/msql"
+	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
 	"github.com/zhimaAi/llm_adaptor/api/cohere"
 	"github.com/zhimaAi/llm_adaptor/api/jina"
 	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"sort"
-
-	"github.com/zhimaAi/go_tools/msql"
 )
 
 type ZhimaRerankReq struct {
@@ -121,6 +121,31 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		zhimaRes.InputToken = res.Meta.Tokens.InputTokens
 		zhimaRes.OutputToken = res.Meta.Tokens.OutputTokens
 		for _, item := range res.Results {
+			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
+				Index:          item.Index,
+				RelevanceScore: item.RelevanceScore,
+			})
+		}
+	case "ali":
+		client := ali.NewClient(a.meta.APIKey)
+		req := &ali.CreateRerankReq{
+			Model: a.meta.Model,
+			Input: ali.Input{
+				Query:     params.Query,
+				Documents: params.Passages,
+			},
+			Parameters: ali.Parameters{
+				ReturnDocuments: false,
+				TopN:            params.TopK,
+			},
+		}
+		res, err := client.CreateRerank(req)
+		if err != nil {
+			return ZhimaRerankResp{}, err
+		}
+		zhimaRes.InputToken = res.Usage.TotalTokens / 2 //没办法,输入输出个半
+		zhimaRes.OutputToken = res.Usage.TotalTokens - zhimaRes.InputToken
+		for _, item := range res.Output.Results {
 			zhimaRes.Data = append(zhimaRes.Data, &RerankData{
 				Index:          item.Index,
 				RelevanceScore: item.RelevanceScore,

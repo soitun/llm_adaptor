@@ -34,6 +34,17 @@ type Function struct {
 	Arguments string `json:"arguments"`
 }
 
+type ThinkingType string
+
+const (
+	ThinkingTypeEnabled  ThinkingType = "enabled"
+	ThinkingTypeDisabled ThinkingType = "disabled"
+)
+
+type Thinking struct {
+	Type ThinkingType `json:"type"`
+}
+
 type ChatCompletionRequest struct {
 	Model            string                         `json:"model"`
 	Messages         []ChatCompletionRequestMessage `json:"messages"`
@@ -49,7 +60,10 @@ type ChatCompletionRequest struct {
 	TopP             int                            `json:"top_p,omitempty"`
 	User             string                         `json:"user,omitempty"`
 	Tools            []interface{}                  `json:"tools"`
+	Thinking         *Thinking                      `json:"thinking,omitempty"`
+	EnableThinking   *bool                          `json:"enable_thinking,omitempty"`
 }
+
 type StreamOptions struct {
 	IncludeUsage bool `json:"include_usage,omitempty"`
 }

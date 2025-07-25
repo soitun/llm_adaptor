@@ -127,6 +127,9 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
 		}
+		if tool.InArrayString(a.meta.Corp, []string{`ali`, `siliconflow`}) && a.meta.ChoosableThinking {
+			req.EnableThinking = &a.meta.EnabledThinking
+		}
 		if client == nil {
 			return &ZhimaChatCompletionStreamResponse{}, errors.New(`corp not supported`)
 		}
@@ -188,9 +191,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		var tools []interface{}
 		if len(req.FunctionTools) > 0 {
 			if client.ApiVersion == define.ApiVersionV2 {
-				if check := client.CheckModelUse(len(req.FunctionTools) > 0); !check {
-					return &ZhimaChatCompletionStreamResponse{}, errors.New("request model are not support")
-				}
 				for _, v := range req.FunctionTools {
 					tools = append(tools, map[string]interface{}{
 						`type`: `function`,
@@ -305,6 +305,13 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			Messages:    messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
+		}
+		if a.meta.ChoosableThinking {
+			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
+			if a.meta.EnabledThinking {
+				thinking.Type = openai.ThinkingTypeEnabled
+			}
+			req.Thinking = &thinking
 		}
 		stream, err := client.CreateChatCompletionStream(req)
 		if err != nil {
