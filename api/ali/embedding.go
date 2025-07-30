@@ -3,16 +3,16 @@
 package ali
 
 type EmbeddingRequest struct {
-	Input      Texts    `json:"input"`
-	Model      string   `json:"model"`
-	Parameters TextType `json:"parameters"`
-	Dimension  int      `json:"dimension"`
+	Input      Texts          `json:"input"`
+	Model      string         `json:"model"`
+	Parameters QwenParameters `json:"parameters"`
 }
 type Texts struct {
 	Texts []string `json:"texts"`
 }
-type TextType struct {
-	TextType string `json:"text_type"`
+type QwenParameters struct {
+	TextType  string `json:"text_type"`
+	Dimension int    `json:"dimension"`
 }
 
 type EmbeddingResponse struct {
