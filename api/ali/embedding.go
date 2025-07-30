@@ -6,6 +6,7 @@ type EmbeddingRequest struct {
 	Input      Texts    `json:"input"`
 	Model      string   `json:"model"`
 	Parameters TextType `json:"parameters"`
+	Dimension  int      `json:"dimension"`
 }
 type Texts struct {
 	Texts []string `json:"texts"`

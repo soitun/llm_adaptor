@@ -16,6 +16,9 @@ type Meta struct {
 	Region string //for volcengine and tencent
 
 	APPID string //for spark
+
+	Dimension int    // 向量维度
+	TextType  string // 向量检索任务类型：query 或 document
 }
 
 type Adaptor struct {

@@ -119,10 +119,19 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
+		dimesion := a.meta.Dimension
+		if dimesion == 0 {
+			dimesion = 1536
+		}
+		textType := a.meta.TextType
+		if textType == "" {
+			textType = "document"
+		}
 		r := ali.EmbeddingRequest{
 			Input:      ali.Texts{Texts: []string{req.Input}},
 			Model:      a.meta.Model,
-			Parameters: ali.TextType{TextType: "document"},
+			Dimension:  a.meta.Dimension,
+			Parameters: ali.TextType{TextType: a.meta.TextType},
 		}
 		res, err := client.CreateEmbeddings(r)
 		if err != nil {
