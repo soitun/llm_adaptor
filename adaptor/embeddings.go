@@ -131,7 +131,7 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			Input:      ali.Texts{Texts: []string{req.Input}},
 			Model:      a.meta.Model,
 			Dimension:  a.meta.Dimension,
-			Parameters: ali.TextType{TextType: a.meta.TextType},
+			Parameters: ali.TextType{TextType: textType},
 		}
 		res, err := client.CreateEmbeddings(r)
 		if err != nil {
