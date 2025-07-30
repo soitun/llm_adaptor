@@ -130,7 +130,7 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		r := ali.EmbeddingRequest{
 			Input:      ali.Texts{Texts: []string{req.Input}},
 			Model:      a.meta.Model,
-			Dimension:  a.meta.Dimension,
+			Dimension:  dimesion,
 			Parameters: ali.TextType{TextType: textType},
 		}
 		res, err := client.CreateEmbeddings(r)
