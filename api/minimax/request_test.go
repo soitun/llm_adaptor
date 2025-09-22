@@ -3,10 +3,11 @@ package minimax
 import (
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/api/openai"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/zhimaAi/llm_adaptor/api/openai"
 )
 
 func TestCompletion(t *testing.T) {

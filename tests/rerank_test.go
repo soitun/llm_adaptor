@@ -2,9 +2,10 @@ package tests
 
 import (
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/adaptor"
 	"os"
 	"testing"
+
+	"github.com/zhimaAi/llm_adaptor/adaptor"
 )
 
 func testRerank(Meta adaptor.Meta) {

@@ -4,10 +4,10 @@ package ollama
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"time"
 
+	"github.com/zhimaAi/llm_adaptor/basics"
 	"github.com/zhimaAi/llm_adaptor/common"
 )
 
@@ -102,7 +102,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 		}
 		noSpaceLine := bytes.TrimSpace(rawLine)
 		var response ChatCompletionStreamResponse
-		unmarshalErr := json.Unmarshal(noSpaceLine, &response)
+		unmarshalErr := basics.JsonDecode(noSpaceLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr
 		}

@@ -3,12 +3,12 @@
 package hunyuan
 
 import (
-	"encoding/json"
 	"errors"
 	"io"
 
 	common "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/http"
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type ChatCompletionStream struct {
@@ -24,7 +24,7 @@ func (c *ChatCompletionStream) Recv() (tencentHunyuan.ChatCompletionsResponsePar
 			return tencentHunyuan.ChatCompletionsResponseParams{}, io.EOF
 		}
 		var response tencentHunyuan.ChatCompletionsResponseParams
-		err := json.Unmarshal(event.Data, &response)
+		err := basics.JsonDecode(event.Data, &response)
 		if err != nil {
 			return tencentHunyuan.ChatCompletionsResponseParams{}, err
 		}

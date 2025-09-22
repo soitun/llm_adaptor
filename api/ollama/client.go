@@ -5,8 +5,9 @@ package ollama
 import (
 	"bufio"
 	"errors"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
+
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type Client struct {

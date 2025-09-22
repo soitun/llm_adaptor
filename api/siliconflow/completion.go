@@ -4,12 +4,13 @@ package siliconflow
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
 	"strings"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type ChatCompletionRequestMessage struct {
@@ -138,7 +139,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 		}
 
 		var response ChatCompletionStreamResponse
-		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
+		unmarshalErr := basics.JsonDecode(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr
 		}

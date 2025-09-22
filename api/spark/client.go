@@ -6,7 +6,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type Client struct {
@@ -83,7 +83,7 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 	}
 
 	var response ChatCompletionResponse
-	err = json.Unmarshal(msg, &response)
+	err = basics.JsonDecode(msg, &response)
 	if err != nil {
 		return ChatCompletionResponse{}, err
 	}

@@ -5,9 +5,10 @@ package xinference
 import (
 	"bufio"
 	"errors"
+	"io"
+
 	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/common"
-	"io"
 )
 
 type Client struct {

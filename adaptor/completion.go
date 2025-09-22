@@ -3,7 +3,6 @@
 package adaptor
 
 import (
-	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
@@ -32,6 +31,7 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
 	"github.com/zhimaAi/llm_adaptor/api/zhipu"
+	"github.com/zhimaAi/llm_adaptor/basics"
 	"github.com/zhimaAi/llm_adaptor/define"
 )
 
@@ -311,14 +311,14 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			}
 		} else if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
 			arguments := make(map[string]string)
-			err := json.Unmarshal([]byte(res.FunctionCall.Arguments), &arguments)
+			err := basics.JsonDecode([]byte(res.FunctionCall.Arguments), &arguments)
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
 			for k := range arguments {
 				arguments[k] = ``
 			}
-			res.FunctionCall.Arguments, _ = tool.JsonEncode(arguments)
+			res.FunctionCall.Arguments, _ = basics.JsonEncodeStr(arguments)
 
 			re := regexp.MustCompile(`"prompt":\s*"([^"]*)"`)
 			matches := re.FindStringSubmatch(res.FunctionCall.Thoughts)
@@ -381,7 +381,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}
 		var functionToolCalls []FunctionToolCall
 		if res.Type == `tool_use` {
-			arguments, err := tool.JsonEncode(res.Content[0].Input)
+			arguments, err := basics.JsonEncodeStr(res.Content[0].Input)
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}

@@ -4,8 +4,9 @@ package adaptor
 
 import (
 	"errors"
-	"github.com/zhimaAi/llm_adaptor/api/spark"
 	"io"
+
+	"github.com/zhimaAi/llm_adaptor/api/spark"
 )
 
 type SparkStreamResult struct {

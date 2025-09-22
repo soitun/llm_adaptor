@@ -3,10 +3,11 @@
 package spark
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/gorilla/websocket"
 	"io"
+
+	"github.com/gorilla/websocket"
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type ChatCompletionRequest struct {
@@ -101,7 +102,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionResponse, error) {
 		}
 
 		var response ChatCompletionResponse
-		err = json.Unmarshal(msg, &response)
+		err = basics.JsonDecode(msg, &response)
 		if err != nil {
 			return ChatCompletionResponse{}, err
 		}

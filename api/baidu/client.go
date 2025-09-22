@@ -4,13 +4,14 @@ package baidu
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/common"
-	"github.com/zhimaAi/llm_adaptor/define"
 	"io"
 	"strings"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
+	"github.com/zhimaAi/llm_adaptor/common"
+	"github.com/zhimaAi/llm_adaptor/define"
 )
 
 type Client struct {
@@ -94,7 +95,7 @@ func (c *Client) CreateEmbeddings(req EmbeddingRequest) (EmbeddingResponse, erro
 	}
 
 	var result EmbeddingResponse
-	err = json.Unmarshal(body, &result)
+	err = basics.JsonDecode(body, &result)
 	if err != nil {
 		return EmbeddingResponse{}, err
 	}
@@ -152,7 +153,7 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 	}
 
 	var result ChatCompletionResponse
-	err = json.Unmarshal(body, &result)
+	err = basics.JsonDecode(body, &result)
 	if err != nil {
 		return ChatCompletionResponse{}, err
 	}
@@ -214,7 +215,7 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 }
 
 func httpCheckError(httpStatusCode int, body []byte, errorResp common.ErrorResponseInterface) error {
-	err := json.Unmarshal(body, &errorResp)
+	err := basics.JsonDecode(body, &errorResp)
 	if err != nil {
 		parseError := &common.ParseError{
 			HTTPStatusCode: httpStatusCode,

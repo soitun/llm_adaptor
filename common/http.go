@@ -4,10 +4,11 @@ package common
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type Header struct {
@@ -21,7 +22,7 @@ type Param struct {
 }
 
 func HttpPost(url string, headers []Header, params []Param, body any) (response *http.Response, err error) {
-	jsonData, err := json.Marshal(body)
+	jsonData, err := basics.JsonEncode(body)
 	if err != nil {
 		return
 	}
@@ -72,7 +73,7 @@ type ErrorResponseInterface interface {
 
 func HttpCheckError(resp *http.Response, errorResp ErrorResponseInterface) error {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusBadRequest {
-		err := json.NewDecoder(resp.Body).Decode(&errorResp)
+		err := basics.JsonDecoder(resp.Body, &errorResp)
 		if err != nil {
 			parseError := &ParseError{
 				HTTPStatusCode: resp.StatusCode,
@@ -90,7 +91,7 @@ func HttpCheckErrors[T ErrorResponseInterface](resp *http.Response) error {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusBadRequest {
 		var errorResp T
 		var errorRespArray []T
-		err := json.NewDecoder(resp.Body).Decode(&errorRespArray)
+		err := basics.JsonDecoder(resp.Body, &errorRespArray)
 		if err != nil {
 			parseError := &ParseError{
 				HTTPStatusCode: resp.StatusCode,
@@ -114,7 +115,7 @@ func HttpDecodeResponse(resp *http.Response, v any) (err error) {
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(body, v)
+	err = basics.JsonDecode(body, v)
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
