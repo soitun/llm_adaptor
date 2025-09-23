@@ -7,7 +7,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type Token struct {
@@ -82,7 +83,7 @@ func (t *Token) refreshBaiduToken(EndPoint string) (string, error) {
 	}(resp.Body)
 
 	var respData map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&respData); err != nil {
+	if err := basics.JsonDecoder(resp.Body, &respData); err != nil {
 		return "", err
 	}
 
@@ -220,7 +221,7 @@ func (t *Token) refreshVolcengineToken(EndPoint, Region, Model string) (string, 
 	}
 
 	var data map[string]interface{}
-	err = json.Unmarshal(respBody, &data)
+	err = basics.JsonDecode(respBody, &data)
 	if err != nil {
 		return "", err
 	}

@@ -4,8 +4,9 @@ package cohere
 
 import (
 	"bufio"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
+
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type Client struct {

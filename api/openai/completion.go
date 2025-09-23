@@ -4,12 +4,12 @@ package openai
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"strings"
 
+	"github.com/zhimaAi/llm_adaptor/basics"
 	"github.com/zhimaAi/llm_adaptor/common"
 )
 
@@ -154,7 +154,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 		}
 
 		var response ChatCompletionStreamResponse
-		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
+		unmarshalErr := basics.JsonDecode(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr
 		}

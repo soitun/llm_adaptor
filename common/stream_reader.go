@@ -4,8 +4,9 @@ package common
 
 import (
 	"bufio"
-	"encoding/json"
 	"net/http"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type StreamReader[T any] struct {
@@ -24,7 +25,7 @@ func (stream *StreamReader[T]) UnmarshalError() {
 		return
 	}
 
-	err := json.Unmarshal(errBytes, stream.ErrorResponse)
+	err := basics.JsonDecode(errBytes, stream.ErrorResponse)
 	if err != nil {
 		stream.ErrorResponse = nil
 	}

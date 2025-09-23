@@ -4,12 +4,12 @@ package baidu
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"strings"
 
+	"github.com/zhimaAi/llm_adaptor/basics"
 	"github.com/zhimaAi/llm_adaptor/common"
 	"github.com/zhimaAi/llm_adaptor/define"
 )
@@ -116,7 +116,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 		if !bytes.HasPrefix(noSpaceLine, headerData) {
 			if bytes.HasPrefix(noSpaceLine, errorPrefix) {
 				var errResp ErrorResponse
-				err := json.Unmarshal(noSpaceLine, &errResp)
+				err := basics.JsonDecode(noSpaceLine, &errResp)
 				if err != nil {
 					return *new(ChatCompletionStreamResponse), fmt.Errorf("unmarshal error, %w", c.StreamReader.ErrorResponse.Error())
 				} else {
@@ -144,7 +144,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 			c.StreamReader.IsFinished = true
 			return *new(ChatCompletionStreamResponse), io.EOF
 		}
-		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
+		unmarshalErr := basics.JsonDecode(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr
 		}

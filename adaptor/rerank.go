@@ -3,6 +3,8 @@
 package adaptor
 
 import (
+	"sort"
+
 	"github.com/zhimaAi/go_tools/msql"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
@@ -10,7 +12,6 @@ import (
 	"github.com/zhimaAi/llm_adaptor/api/jina"
 	"github.com/zhimaAi/llm_adaptor/api/siliconflow"
 	"github.com/zhimaAi/llm_adaptor/api/xinference"
-	"sort"
 )
 
 type ZhimaRerankReq struct {

@@ -4,6 +4,7 @@ package adaptor
 
 import (
 	"errors"
+
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
 	"github.com/zhimaAi/go_tools/logs"

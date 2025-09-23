@@ -3,12 +3,11 @@
 package adaptor
 
 import (
-	"encoding/json"
 	"regexp"
 	"strings"
 
-	"github.com/zhimaAi/go_tools/tool"
 	"github.com/zhimaAi/llm_adaptor/api/baidu"
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type BaiduStreamResult struct {
@@ -37,14 +36,14 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		})
 		if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
 			arguments := make(map[string]string)
-			err := json.Unmarshal([]byte(res.FunctionCall.Arguments), &arguments)
+			err := basics.JsonDecode([]byte(res.FunctionCall.Arguments), &arguments)
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
 			for k := range arguments {
 				arguments[k] = ``
 			}
-			res.FunctionCall.Arguments, _ = tool.JsonEncode(arguments)
+			res.FunctionCall.Arguments, _ = basics.JsonEncodeStr(arguments)
 
 			re := regexp.MustCompile(`"prompt":\s*"([^"]*)"`)
 			matches := re.FindStringSubmatch(res.FunctionCall.Thoughts)

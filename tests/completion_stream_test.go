@@ -3,10 +3,11 @@ package tests
 import (
 	"errors"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/adaptor"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/zhimaAi/llm_adaptor/adaptor"
 )
 
 func testChatCompletionStream(Meta adaptor.Meta) {

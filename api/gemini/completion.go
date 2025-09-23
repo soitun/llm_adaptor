@@ -5,10 +5,11 @@ package gemini
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type ChatCompletionRequest struct {
@@ -101,7 +102,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionResponse, error) {
 		if bytes.HasSuffix(noSpaceLine, []byte("]")) {
 			noSpaceLine = bytes.TrimSuffix(noSpaceLine, []byte("]"))
 		}
-		unmarshalErr := json.Unmarshal(noSpaceLine, &response)
+		unmarshalErr := basics.JsonDecode(noSpaceLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionResponse), unmarshalErr
 		}

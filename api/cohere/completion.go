@@ -4,10 +4,11 @@ package cohere
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/zhimaAi/llm_adaptor/common"
 	"io"
+
+	"github.com/zhimaAi/llm_adaptor/basics"
+	"github.com/zhimaAi/llm_adaptor/common"
 )
 
 type ChatCompletionRequest struct {
@@ -99,7 +100,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 
 		noSpaceLine := bytes.TrimSpace(rawLine)
 		var response ChatCompletionStreamResponse
-		unmarshalErr := json.Unmarshal(noSpaceLine, &response)
+		unmarshalErr := basics.JsonDecode(noSpaceLine, &response)
 		if unmarshalErr != nil {
 			return *new(ChatCompletionStreamResponse), unmarshalErr
 		}
