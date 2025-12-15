@@ -340,7 +340,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
 	case "claude":
-		client := claude.NewClient(a.meta.APIKey, a.meta.APIVersion)
+		client := claude.NewClient(a.meta.APIKey)
 		var system string
 		var messages []claude.Message
 		for _, v := range req.Messages {

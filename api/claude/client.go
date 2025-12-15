@@ -11,16 +11,14 @@ import (
 )
 
 type Client struct {
-	EndPoint   string
-	APIKey     string
-	APIVersion string
+	EndPoint string
+	APIKey   string
 }
 
-func NewClient(APIKey, APIVersion string) *Client {
+func NewClient(APIKey string) *Client {
 	return &Client{
-		EndPoint:   "https://api.anthropic.com",
-		APIKey:     APIKey,
-		APIVersion: APIVersion,
+		EndPoint: "https://api.anthropic.com",
+		APIKey:   APIKey,
 	}
 }
 
@@ -29,7 +27,6 @@ func (c *Client) CreateChatCompletion(req ChatCompletionRequest) (ChatCompletion
 	url := c.EndPoint + "/v1/messages"
 	headers := []common.Header{
 		{Key: "x-api-key", Value: c.APIKey},
-		{Key: "anthropic-version", Value: c.APIVersion},
 	}
 
 	responseRaw, err := common.HttpPost(url, headers, nil, req)
@@ -62,7 +59,6 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 	url := c.EndPoint + "/v1/messages"
 	headers := []common.Header{
 		{Key: "x-api-key", Value: c.APIKey},
-		{Key: "anthropic-version", Value: c.APIVersion},
 	}
 
 	req.Stream = true

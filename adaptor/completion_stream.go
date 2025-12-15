@@ -231,7 +231,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			&BaiduStreamResult{stream},
 		}
 	case "claude":
-		client := claude.NewClient(a.meta.APIKey, a.meta.APIVersion)
+		client := claude.NewClient(a.meta.APIKey)
 		var system string
 		var messages []claude.Message
 		for _, v := range req.Messages {
