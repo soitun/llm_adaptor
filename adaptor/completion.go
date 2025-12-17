@@ -3,6 +3,7 @@
 package adaptor
 
 import (
+	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
@@ -36,10 +37,29 @@ import (
 )
 
 type ZhimaChatCompletionMessage struct {
-	Role     string   `json:"role"`
-	Content  string   `json:"content"`
-	Function Function `json:"function"`
+	Role             string
+	Content          string
+	QuestionMultiple QuestionMultiple
+	Function         Function
 }
+
+func (m ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
+	type zhimaChatCompletionMessageReal struct {
+		Role     string   `json:"role"`
+		Content  any      `json:"content"`
+		Function Function `json:"function,omitzero"`
+	}
+	message := zhimaChatCompletionMessageReal{
+		Role:     m.Role,
+		Content:  m.Content,
+		Function: m.Function,
+	}
+	if len(m.QuestionMultiple) > 0 {
+		message.Content = m.QuestionMultiple
+	}
+	return json.Marshal(message)
+}
+
 type Function struct {
 	Name      string `json:"name"`
 	Arguments string `json:"arguments"`
@@ -47,10 +67,10 @@ type Function struct {
 
 type ZhimaChatCompletionRequest struct {
 	Messages      []ZhimaChatCompletionMessage `json:"messages"`
-	MaxToken      int                          `json:"max_token,omitempty"`
-	Temperature   float64                      `json:"temperature,omitempty"`
-	FunctionTools []FunctionTool               `json:"function_tools"`
-	Tools         []FunctionTool               `json:"tools"`
+	MaxToken      int                          `json:"max_token,omitzero"`
+	Temperature   float64                      `json:"temperature,omitzero"`
+	FunctionTools []FunctionTool               `json:"function_tools,omitzero"`
+	Tools         []FunctionTool               `json:"tools,omitzero"`
 }
 type FunctionTool struct {
 	Name        string     `json:"name"`
