@@ -52,3 +52,39 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		CompletionToken:   completionTokens,
 	}, nil
 }
+
+type OpenAIImageGenerationStreamResult struct {
+	*openai.ImageGenerationStream
+}
+
+func (r *OpenAIImageGenerationStreamResult) Read() (ZhimaImageGenerationResp, error) {
+	res, err := r.Recv()
+	if err != nil {
+		return ZhimaImageGenerationResp{}, err
+	}
+	inputToken := res.Usage.TotalTokens - res.Usage.OutputTokens
+	outputToken := res.Usage.OutputTokens
+	datas := make([]*ImageGenerationData, 0)
+	if res.Type == `image_generation.completed` {
+		//
+	} else if res.Type == `image_generation.partial_failed` {
+		datas = append(datas, &ImageGenerationData{
+			Error: DataError{
+				Code:    res.Error.Code,
+				Message: res.Error.Message,
+			},
+		})
+	} else if res.Type == `image_generation.partial_succeeded` {
+		datas = append(datas, &ImageGenerationData{
+			Url:     res.Url,
+			B64Json: res.B64Json,
+			Size:    res.Size,
+			Error:   DataError{},
+		})
+	}
+	return ZhimaImageGenerationResp{
+		InputToken:  inputToken,
+		OutputToken: outputToken,
+		Datas:       datas,
+	}, nil
+}
