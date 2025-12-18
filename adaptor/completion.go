@@ -47,12 +47,13 @@ func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple Questi
 	m.questionMultiple = questionMultiple
 }
 
+type zhimaChatCompletionMessageReal struct {
+	Role     string   `json:"role"`
+	Content  any      `json:"content"`
+	Function Function `json:"function,omitzero"`
+}
+
 func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
-	type zhimaChatCompletionMessageReal struct {
-		Role     string   `json:"role"`
-		Content  any      `json:"content"`
-		Function Function `json:"function,omitzero"`
-	}
 	message := zhimaChatCompletionMessageReal{
 		Role:     m.Role,
 		Content:  m.Content,
@@ -62,6 +63,25 @@ func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 		message.Content = m.questionMultiple
 	}
 	return json.Marshal(message)
+}
+
+func (m *ZhimaChatCompletionMessage) UnmarshalJSON(data []byte) error {
+	message := zhimaChatCompletionMessageReal{}
+	if err := json.Unmarshal(data, &message); err != nil {
+		return err
+	}
+	m.Role = message.Role
+	if content, ok := message.Content.(string); ok {
+		m.Content = content
+	} else {
+		bs, err := json.Marshal(message.Content)
+		if err != nil {
+			return err
+		}
+		m.Content = string(bs)
+	}
+	m.Function = message.Function
+	return nil
 }
 
 type Function struct {

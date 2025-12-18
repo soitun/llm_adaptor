@@ -8,7 +8,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan v1.0.1200
 	github.com/volcengine/volc-sdk-golang v1.0.216
 	github.com/volcengine/volcengine-go-sdk v1.1.23
-	github.com/zhimaAi/go_tools v0.0.0-20250619040721-395f6ac83f6d
+	github.com/zhimaAi/go_tools v0.0.0-20250925081513-2ba58ff32b01
 )
 
 require (
