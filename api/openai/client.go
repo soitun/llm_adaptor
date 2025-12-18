@@ -120,11 +120,10 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 	return &ChatCompletionStream{StreamReader: streamResp}, nil
 }
 
-func (c *Client) CreateImageGenerate(req ImageGenerationRequest) (ImageGenerationResponse, error) {
+func (c *Client) CreateImageGenerate(req any) (ImageGenerationResponse, error) {
 	headers := []common.Header{
 		{Key: "Authorization", Value: "Bearer " + c.APIKey},
 	}
-	req.Stream = false
 	responseRaw, err := common.HttpPost(c.EndPoint, headers, nil, req)
 	if err != nil {
 		return ImageGenerationResponse{}, err
@@ -145,11 +144,10 @@ func (c *Client) CreateImageGenerate(req ImageGenerationRequest) (ImageGeneratio
 	return result, err
 }
 
-func (c *Client) CreateImageGenerateStream(req ImageGenerationRequest) (*ImageGenerationStream, error) {
+func (c *Client) CreateImageGenerateStream(req any) (*ImageGenerationStream, error) {
 	headers := []common.Header{
 		{Key: "Authorization", Value: "Bearer " + c.APIKey},
 	}
-	req.Stream = true
 	responseRaw, err := common.HttpStreamPost(c.EndPoint, headers, nil, req)
 	if err != nil {
 		return nil, err

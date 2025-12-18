@@ -73,7 +73,7 @@ func (c *Client) CreateChatCompletionStream(req openai.ChatCompletionRequest) (*
 	return OpenAIClient.CreateChatCompletionStream(req)
 }
 
-func (c *Client) CreateImageGenerate(req openai.ImageGenerationRequest) (openai.ImageGenerationResponse, error) {
+func (c *Client) CreateImageGenerate(req any) (openai.ImageGenerationResponse, error) {
 	var (
 		err         error
 		accessToken = c.AK
@@ -88,7 +88,7 @@ func (c *Client) CreateImageGenerate(req openai.ImageGenerationRequest) (openai.
 	return OpenAIClient.CreateImageGenerate(req)
 }
 
-func (c *Client) CreateImageGenerateStream(req openai.ImageGenerationRequest) (*openai.ImageGenerationStream, error) {
+func (c *Client) CreateImageGenerateStream(req any) (*openai.ImageGenerationStream, error) {
 	var (
 		err         error
 		accessToken = c.AK

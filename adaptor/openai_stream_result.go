@@ -55,6 +55,7 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 
 type OpenAIImageGenerationStreamResult struct {
 	*openai.ImageGenerationStream
+	Ext string
 }
 
 func (r *OpenAIImageGenerationStreamResult) Read() (ZhimaImageGenerationResp, error) {
@@ -80,6 +81,7 @@ func (r *OpenAIImageGenerationStreamResult) Read() (ZhimaImageGenerationResp, er
 			B64Json: res.B64Json,
 			Size:    res.Size,
 			Error:   DataError{},
+			Ext:     r.Ext,
 		})
 	}
 	return ZhimaImageGenerationResp{

@@ -25,19 +25,20 @@ func imageGenerations(meta adaptor.Meta) {
 	ret, err := client.CreateImageGenerate(&adaptor.ZhimaImageGenerationReq{
 		Prompt:                    "帮我生成一个大海的图片",
 		Image:                     nil,
-		Size:                      "2048x2048",
-		Seed:                      -1,
-		SequentialImageGeneration: "disabled",
+		Size:                      getString("2048x2048"),
+		SequentialImageGeneration: getString("disabled"),
 		MaxImages:                 1,
 		Stream:                    false,
-		ResponseFormat:            "url",
-		Watermark:                 false,
-		OptimizePromptMode:        "standard",
+		ResponseFormat:            getString("b64_json"),
+		Watermark:                 getBool(false),
+		OptimizePromptMode:        getString("standard"),
 	})
 	if err != nil {
 		fmt.Println(fmt.Sprintf(`生成失败：%s`, err.Error()))
 	} else {
-		fmt.Println(fmt.Sprintf(`生成成功：%s`, tool.JsonEncodeNoError(ret)))
+		for _, val := range ret.Datas {
+			fmt.Println(fmt.Sprintf(`图片生成成功：%s`, val.B64Json))
+		}
 	}
 }
 
@@ -55,14 +56,13 @@ func imageGenerationsStream(Meta adaptor.Meta) {
 	req := &adaptor.ZhimaImageGenerationReq{
 		Prompt:                    "帮我生成一个大海的图片，我要2张",
 		Image:                     nil,
-		Size:                      "2048x2048",
-		Seed:                      -1,
-		SequentialImageGeneration: "auto",
+		Size:                      getString("2048x2048"),
+		SequentialImageGeneration: getString("auto"),
 		MaxImages:                 2,
 		Stream:                    true,
-		ResponseFormat:            "url",
-		Watermark:                 false,
-		OptimizePromptMode:        "standard",
+		ResponseFormat:            getString("url"),
+		Watermark:                 getBool(false),
+		OptimizePromptMode:        getString("standard"),
 	}
 	stream, err := client.CreateImageGenerateStream(req)
 
@@ -83,4 +83,12 @@ func imageGenerationsStream(Meta adaptor.Meta) {
 		}
 		fmt.Println(fmt.Sprintf(`stream result %s`, tool.JsonEncodeNoError(response)))
 	}
+}
+
+func getString(msg string) *string {
+	return &msg
+}
+
+func getBool(msg bool) *bool {
+	return &msg
 }

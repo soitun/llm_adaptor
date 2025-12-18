@@ -19,17 +19,16 @@ type OptimizePromptOptions struct {
 	Mode string `json:"mode"`
 }
 type ImageGenerationRequest struct {
-	Model                            string                           `json:"model"`
-	Prompt                           string                           `json:"prompt"`
-	Image                            []string                         `json:"image"`
-	Size                             string                           `json:"size"`
-	Seed                             int                              `json:"seed"`
-	SequentialImageGeneration        string                           `json:"sequential_image_generation"`
-	SequentialImageGenerationOptions SequentialImageGenerationOptions `json:"sequential_image_generation_options"`
-	Stream                           bool                             `json:"stream"`
-	ResponseFormat                   string                           `json:"response_format"`
-	Watermark                        bool                             `json:"watermark"`
-	OptimizePromptOptions            OptimizePromptOptions            `json:"optimize_prompt_options"`
+	Model                            string                            `json:"model"`
+	Prompt                           string                            `json:"prompt"`
+	Image                            []string                          `json:"image"`
+	Size                             string                            `json:"size"`
+	SequentialImageGeneration        string                            `json:"sequential_image_generation"`
+	SequentialImageGenerationOptions *SequentialImageGenerationOptions `json:"sequential_image_generation_options"`
+	Stream                           bool                              `json:"stream"`
+	ResponseFormat                   string                            `json:"response_format"`
+	Watermark                        bool                              `json:"watermark"`
+	OptimizePromptOptions            *OptimizePromptOptions            `json:"optimize_prompt_options"`
 }
 type DataItem struct {
 	Url     string    `json:"url"`
