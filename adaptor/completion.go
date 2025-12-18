@@ -39,11 +39,15 @@ import (
 type ZhimaChatCompletionMessage struct {
 	Role             string
 	Content          string
-	QuestionMultiple QuestionMultiple
 	Function         Function
+	questionMultiple QuestionMultiple
 }
 
-func (m ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
+func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple QuestionMultiple) {
+	m.questionMultiple = questionMultiple
+}
+
+func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	type zhimaChatCompletionMessageReal struct {
 		Role     string   `json:"role"`
 		Content  any      `json:"content"`
@@ -54,8 +58,8 @@ func (m ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 		Content:  m.Content,
 		Function: m.Function,
 	}
-	if len(m.QuestionMultiple) > 0 {
-		message.Content = m.QuestionMultiple
+	if len(m.questionMultiple) > 0 {
+		message.Content = m.questionMultiple
 	}
 	return json.Marshal(message)
 }
