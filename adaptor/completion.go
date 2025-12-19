@@ -425,11 +425,23 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		for _, v := range req.Messages {
 			messages = append(messages, openai.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
 		}
+		var tools []interface{}
+		for _, v := range req.FunctionTools {
+			tools = append(tools, map[string]interface{}{
+				`type`: `function`,
+				`function`: map[string]interface{}{
+					`name`:        v.Name,
+					`description`: v.Description,
+					`parameters`:  v.Parameters,
+				},
+			})
+		}
 		req := openai.ChatCompletionRequest{
 			Model:       a.meta.Model,
 			Messages:    messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
+			Tools:       tools,
 		}
 		if a.meta.ChoosableThinking {
 			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
