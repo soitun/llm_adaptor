@@ -24,6 +24,9 @@ type ChatCompletionRequest struct {
 	// Model is the model name, as in [GenerateRequest].
 	Model string `json:"model"`
 
+	// Tools
+	Tools []interface{} `json:"tools"`
+
 	// Messages is the messages of the chat - can be used to keep a chat memory.
 	Messages []ChatCompletionMessage `json:"messages"`
 

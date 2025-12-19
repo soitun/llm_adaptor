@@ -438,6 +438,17 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		for _, v := range req.Messages {
 			messages = append(messages, ollama.ChatCompletionMessage{Role: v.Role, Content: v.Content})
 		}
+		var tools []interface{}
+		for _, v := range req.FunctionTools {
+			tools = append(tools, map[string]interface{}{
+				`type`: `function`,
+				`function`: map[string]interface{}{
+					`name`:        v.Name,
+					`description`: v.Description,
+					`parameters`:  v.Parameters,
+				},
+			})
+		}
 		req := ollama.ChatCompletionRequest{
 			Model:    a.meta.Model,
 			Messages: messages,
@@ -445,6 +456,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 				"temperature": req.Temperature,
 				"num_ctx":     req.MaxToken,
 			},
+			Tools: tools,
 		}
 		stream, err := client.CreateChatCompletionStream(req)
 		if err != nil {
