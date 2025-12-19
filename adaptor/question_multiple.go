@@ -2,6 +2,13 @@
 
 package adaptor
 
+const (
+	TypeText  = `text`
+	TypeImage = `image_url`
+	TypeAudio = `input_audio`
+	TypeVideo = `video_url`
+)
+
 type ImageUrl struct {
 	Url    string `json:"url"`
 	Detail string `json:"detail,omitzero"`
