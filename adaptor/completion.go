@@ -425,11 +425,23 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		for _, v := range req.Messages {
 			messages = append(messages, openai.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
 		}
+		var tools []interface{}
+		for _, v := range req.FunctionTools {
+			tools = append(tools, map[string]interface{}{
+				`type`: `function`,
+				`function`: map[string]interface{}{
+					`name`:        v.Name,
+					`description`: v.Description,
+					`parameters`:  v.Parameters,
+				},
+			})
+		}
 		req := openai.ChatCompletionRequest{
 			Model:       a.meta.Model,
 			Messages:    messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
+			Tools:       tools,
 		}
 		if a.meta.ChoosableThinking {
 			thinking := openai.Thinking{Type: openai.ThinkingTypeDisabled}
@@ -442,11 +454,21 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
+		var functionToolCalls []FunctionToolCall
+		for _, toolCall := range res.Choices[0].Message.ToolCalls {
+			if toolCall.Type == `function` {
+				functionToolCalls = append(functionToolCalls, FunctionToolCall{
+					Name:      toolCall.Function.Name,
+					Arguments: toolCall.Function.Arguments,
+				})
+			}
+		}
 		return ZhimaChatCompletionResponse{
-			Result:           res.Choices[0].Message.Content,
-			PromptToken:      res.Usage.PromptTokens,
-			CompletionToken:  res.Usage.CompletionTokens,
-			ReasoningContent: res.Choices[0].Message.ReasoningContent,
+			Result:            res.Choices[0].Message.Content,
+			ReasoningContent:  res.Choices[0].Message.ReasoningContent,
+			FunctionToolCalls: functionToolCalls,
+			PromptToken:       res.Usage.PromptTokens,
+			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
@@ -567,9 +589,21 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		for _, v := range req.Messages {
 			messages = append(messages, ollama.ChatCompletionMessage{Role: v.Role, Content: v.Content})
 		}
+		var tools []interface{}
+		for _, v := range req.FunctionTools {
+			tools = append(tools, map[string]interface{}{
+				`type`: `function`,
+				`function`: map[string]interface{}{
+					`name`:        v.Name,
+					`description`: v.Description,
+					`parameters`:  v.Parameters,
+				},
+			})
+		}
 		req := ollama.ChatCompletionRequest{
 			Model:    a.meta.Model,
 			Messages: messages,
+			Tools:    tools,
 			Options: map[string]interface{}{
 				"temperature": req.Temperature,
 				"num_ctx":     req.MaxToken,
@@ -580,11 +614,22 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
+		if len(res.Message.ReasoningContent) == 0 { //兼容处理
+			res.Message.ReasoningContent = res.Message.Thinking
+		}
+		var functionToolCalls []FunctionToolCall
+		for _, toolCall := range res.Message.ToolCalls {
+			functionToolCalls = append(functionToolCalls, FunctionToolCall{
+				Name:      toolCall.Function.Name,
+				Arguments: tool.JsonEncodeNoError(toolCall.Function.Arguments),
+			})
+		}
 		return ZhimaChatCompletionResponse{
-			Result:           res.Message.Content,
-			ReasoningContent: res.Message.ReasoningContent,
-			PromptToken:      res.PromptEvalCount,
-			CompletionToken:  res.EvalCount,
+			Result:            res.Message.Content,
+			ReasoningContent:  res.Message.ReasoningContent,
+			FunctionToolCalls: functionToolCalls,
+			PromptToken:       res.PromptEvalCount,
+			CompletionToken:   res.EvalCount,
 		}, nil
 	case "xinference":
 		client := xinference.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.Model)
