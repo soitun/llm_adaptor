@@ -72,3 +72,33 @@ func (c *Client) CreateChatCompletionStream(req openai.ChatCompletionRequest) (*
 	OpenAIClient := openai.NewClient(c.Host, accessToken, &openai.ErrorResponse{})
 	return OpenAIClient.CreateChatCompletionStream(req)
 }
+
+func (c *Client) CreateImageGenerate(req any) (openai.ImageGenerationResponse, error) {
+	var (
+		err         error
+		accessToken = c.AK
+	)
+	if c.ApiVersion == define.ApiVersionV1 {
+		accessToken, err = getAccessToken(c.Region, c.Model, c.AK, c.SK)
+		if err != nil {
+			return openai.ImageGenerationResponse{}, err
+		}
+	}
+	OpenAIClient := openai.NewClient(c.Host, accessToken, &openai.ErrorResponse{})
+	return OpenAIClient.CreateImageGenerate(req)
+}
+
+func (c *Client) CreateImageGenerateStream(req any) (*openai.ImageGenerationStream, error) {
+	var (
+		err         error
+		accessToken = c.AK
+	)
+	if c.ApiVersion == define.ApiVersionV1 {
+		accessToken, err = getAccessToken(c.Region, c.Model, c.AK, c.SK)
+		if err != nil {
+			return nil, err
+		}
+	}
+	OpenAIClient := openai.NewClient(c.Host, accessToken, &openai.ErrorResponse{})
+	return OpenAIClient.CreateImageGenerateStream(req)
+}

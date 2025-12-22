@@ -119,3 +119,54 @@ func (c *Client) CreateChatCompletionStream(req ChatCompletionRequest) (*ChatCom
 
 	return &ChatCompletionStream{StreamReader: streamResp}, nil
 }
+
+func (c *Client) CreateImageGenerate(req any) (ImageGenerationResponse, error) {
+	headers := []common.Header{
+		{Key: "Authorization", Value: "Bearer " + c.APIKey},
+	}
+	responseRaw, err := common.HttpPost(c.EndPoint, headers, nil, req)
+	if err != nil {
+		return ImageGenerationResponse{}, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(responseRaw.Body)
+	err = common.HttpCheckError(responseRaw, c.ErrResp)
+	if err != nil {
+		return ImageGenerationResponse{}, err
+	}
+
+	var result ImageGenerationResponse
+	err = common.HttpDecodeResponse(responseRaw, &result)
+	if err != nil {
+		return ImageGenerationResponse{}, err
+	}
+	return result, err
+}
+
+func (c *Client) CreateImageGenerateStream(req any) (*ImageGenerationStream, error) {
+	headers := []common.Header{
+		{Key: "Authorization", Value: "Bearer " + c.APIKey},
+	}
+	responseRaw, err := common.HttpStreamPost(c.EndPoint, headers, nil, req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = common.HttpCheckError(responseRaw, c.ErrResp)
+	if err != nil {
+		return nil, err
+	}
+
+	var errResp ErrorResponse
+	streamResp := &common.StreamReader[ImageGenerationStreamResponse]{
+		EmptyMessagesLimit: 300,
+		Reader:             bufio.NewReader(responseRaw.Body),
+		Response:           responseRaw,
+		ErrAccumulator:     common.NewErrorAccumulator(),
+		ErrorResponse:      &errResp,
+		HttpHeader:         responseRaw.Header,
+	}
+
+	return &ImageGenerationStream{StreamReader: streamResp}, nil
+}
