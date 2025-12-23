@@ -12,11 +12,6 @@ import (
 	"github.com/zhimaAi/llm_adaptor/common"
 )
 
-type ChatCompletionRequestMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 type ChatCompletionResponseMessage struct {
 	Role      string     `json:"role"`
 	Content   string     `json:"content"`
@@ -34,20 +29,20 @@ type Function struct {
 }
 
 type ChatCompletionRequest struct {
-	Model            string                         `json:"model"`
-	Messages         []ChatCompletionRequestMessage `json:"messages"`
-	Stream           bool                           `json:"stream,omitempty"`
-	FrequencyPenalty int                            `json:"frequency_penalty,omitempty"`
-	Role             string                         `json:"role,omitempty"`
-	MaxTokens        int                            `json:"max_tokens,omitempty"`
-	N                int                            `json:"n,omitempty"`
-	PresencePenalty  int                            `json:"presence_penalty,omitempty"`
-	ResponseFormat   string                         `json:"response_format,omitempty"`
-	Seed             int                            `json:"seed,omitempty"`
-	Temperature      float64                        `json:"temperature,omitempty"`
-	TopP             int                            `json:"top_p,omitempty"`
-	User             string                         `json:"user,omitempty"`
-	Tools            []interface{}                  `json:"tools"`
+	Model            string        `json:"model"`
+	Messages         any           `json:"messages"`
+	Stream           bool          `json:"stream,omitempty"`
+	FrequencyPenalty int           `json:"frequency_penalty,omitempty"`
+	Role             string        `json:"role,omitempty"`
+	MaxTokens        int           `json:"max_tokens,omitempty"`
+	N                int           `json:"n,omitempty"`
+	PresencePenalty  int           `json:"presence_penalty,omitempty"`
+	ResponseFormat   string        `json:"response_format,omitempty"`
+	Seed             int           `json:"seed,omitempty"`
+	Temperature      float64       `json:"temperature,omitempty"`
+	TopP             int           `json:"top_p,omitempty"`
+	User             string        `json:"user,omitempty"`
+	Tools            []interface{} `json:"tools"`
 }
 
 type ChatCompletionChoice struct {

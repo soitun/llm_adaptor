@@ -46,9 +46,11 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		return nil, errors.New("messages is required")
 	}
 
-	for _, msg := range req.Messages {
-		data := "role=" + msg.Role + ",content=" + msg.Content + "\n"
-		logs.Debug(data)
+	for idx := range req.Messages {
+		logs.Debug(`message:%s`, tool.JsonEncodeNoError(req.Messages[idx]))
+	}
+	for idx := range req.FunctionTools {
+		logs.Debug(`function:%s`, tool.JsonEncodeNoError(req.FunctionTools[idx]))
 	}
 
 	var result *ZhimaChatCompletionStreamResponse
@@ -56,10 +58,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 	switch a.meta.Corp {
 	case "openai":
 		client := openai.NewClient("https://api.openai.com/v1", a.meta.APIKey, &openai.ErrorResponse{})
-		var messages []openai.ChatCompletionRequestMessage
-		for _, v := range req.Messages {
-			messages = append(messages, openai.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
-		}
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -73,7 +71,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		req := openai.ChatCompletionRequest{
 			Model:       a.meta.Model,
-			Messages:    messages,
+			Messages:    req.Messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
@@ -106,10 +104,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		} else if a.meta.Corp == "siliconflow" {
 			client = siliconflow.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
 		}
-		var messages []openai.ChatCompletionRequestMessage
-		for _, v := range req.Messages {
-			messages = append(messages, openai.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
-		}
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -123,7 +117,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		req := openai.ChatCompletionRequest{
 			Model:       a.meta.Model,
-			Messages:    messages,
+			Messages:    req.Messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
@@ -143,10 +137,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "azure":
 		client := azure.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.APIKey, a.meta.Model)
-		var messages []azure.ChatCompletionRequestMessage
-		for _, v := range req.Messages {
-			messages = append(messages, azure.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
-		}
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -160,7 +150,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		req := azure.ChatCompletionRequest{
 			Model:       a.meta.Model,
-			Messages:    messages,
+			Messages:    req.Messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
@@ -297,10 +287,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "doubao":
 		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
-		var messages []openai.ChatCompletionRequestMessage
-		for _, v := range req.Messages {
-			messages = append(messages, openai.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
-		}
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -314,7 +300,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		req := openai.ChatCompletionRequest{
 			Model:       a.meta.Model,
-			Messages:    messages,
+			Messages:    req.Messages,
 			Temperature: req.Temperature,
 			MaxTokens:   req.MaxToken,
 			Tools:       tools,
@@ -363,10 +349,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "spark":
 		client := spark.NewClient(a.meta.APIKey, a.meta.APPID, a.meta.SecretKey, a.meta.Model)
-		var messages []spark.ChatCompletionRequestMessage
-		for _, v := range req.Messages {
-			messages = append(messages, spark.ChatCompletionRequestMessage{Role: v.Role, Content: v.Content})
-		}
 		var textFunctions []spark.TextFunction
 		if len(req.FunctionTools) > 0 && tool.InArrayString(a.meta.Model, []string{`Spark Pro`, `Spark Max`, `Spark4.0 Ultra`}) {
 			for _, v := range req.FunctionTools {
@@ -386,7 +368,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			},
 			Payload: spark.RequestPayload{
 				Message: spark.RequestMessage{
-					Text: messages,
+					Text: req.Messages,
 				},
 			},
 		}
