@@ -14,28 +14,23 @@ import (
 	"github.com/zhimaAi/llm_adaptor/define"
 )
 
-type ChatCompletionMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 type ChatCompletionRequest struct {
-	Model           string                  `json:"model"`
-	Messages        []ChatCompletionMessage `json:"messages"`
-	Stream          bool                    `json:"stream,omitempty"`
-	Temperature     float64                 `json:"temperature,omitempty"`
-	TopP            float32                 `json:"top_p,omitempty"`
-	PenaltyScore    float32                 `json:"penalty_score,omitempty"`
-	System          string                  `json:"system,omitempty"`
-	Stop            []string                `json:"stop,omitempty"`
-	DisableSearch   bool                    `json:"disable_search,omitempty"`
-	EnableCitation  bool                    `json:"enable_citation,omitempty"`
-	EnableTrace     bool                    `json:"enable_trace,omitempty"`
-	MaxOutputTokens int                     `json:"max_output_tokens,omitempty"`
-	ResponseFormat  string                  `json:"response_format,omitempty"`
-	UserId          string                  `json:"user_id,omitempty"`
-	Functions       []Function              `json:"functions,omitempty"`
-	Tools           []interface{}           `json:"tools,omitempty"`
+	Model           string        `json:"model"`
+	Messages        any           `json:"messages"`
+	Stream          bool          `json:"stream,omitempty"`
+	Temperature     float64       `json:"temperature,omitempty"`
+	TopP            float32       `json:"top_p,omitempty"`
+	PenaltyScore    float32       `json:"penalty_score,omitempty"`
+	System          string        `json:"system,omitempty"`
+	Stop            []string      `json:"stop,omitempty"`
+	DisableSearch   bool          `json:"disable_search,omitempty"`
+	EnableCitation  bool          `json:"enable_citation,omitempty"`
+	EnableTrace     bool          `json:"enable_trace,omitempty"`
+	MaxOutputTokens int           `json:"max_output_tokens,omitempty"`
+	ResponseFormat  string        `json:"response_format,omitempty"`
+	UserId          string        `json:"user_id,omitempty"`
+	Functions       []Function    `json:"functions,omitempty"`
+	Tools           []interface{} `json:"tools,omitempty"`
 }
 type Function struct {
 	Name        string      `json:"name"`

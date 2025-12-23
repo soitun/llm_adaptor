@@ -13,6 +13,10 @@ import (
 	"github.com/zhimaAi/llm_adaptor/common"
 )
 
+type ChatCompletionRequestMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
 type ChatCompletionResponseMessage struct {
 	Role             string     `json:"role"`
 	Content          string     `json:"content"`

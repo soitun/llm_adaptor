@@ -46,12 +46,10 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		return nil, errors.New("messages is required")
 	}
 
-	for idx := range req.Messages {
-		logs.Debug(`message:%s`, tool.JsonEncodeNoError(req.Messages[idx]))
-	}
-	for idx := range req.FunctionTools {
-		logs.Debug(`function:%s`, tool.JsonEncodeNoError(req.FunctionTools[idx]))
-	}
+	jsonStr, _ := tool.JsonEncodeIndent(req.Messages, ``, "\t")
+	logs.Debug(`messages:%s`, jsonStr)
+	jsonStr, _ = tool.JsonEncodeIndent(req.FunctionTools, ``, "\t")
+	logs.Debug(`function_tools:%s`, jsonStr)
 
 	var result *ZhimaChatCompletionStreamResponse
 
@@ -164,20 +162,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "baidu":
 		client := baidu.NewClient(a.meta.APIKey, a.meta.SecretKey, a.meta.Model)
-
-		var system string
-		var messages []baidu.ChatCompletionMessage
-		for _, v := range req.Messages {
-			if v.Role == "system" {
-				system += v.Content
-			}
-			if v.Role == "user" {
-				messages = append(messages, baidu.ChatCompletionMessage{Role: v.Role, Content: v.Content})
-			} else if v.Role == "assistant" {
-				messages = append(messages, baidu.ChatCompletionMessage{Role: v.Role, Content: v.Content})
-			}
-		}
-
 		var functions []baidu.Function
 		var tools []interface{}
 		if len(req.FunctionTools) > 0 {
@@ -202,7 +186,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 				}
 			}
 		}
-
+		messages, system := MessagesPopSystemRole(req.Messages)
 		req := baidu.ChatCompletionRequest{
 			Model:           client.Model,
 			Messages:        messages,
@@ -222,18 +206,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "claude":
 		client := claude.NewClient(a.meta.APIKey)
-		var system string
-		var messages []claude.Message
-		for _, v := range req.Messages {
-			if v.Role == "system" {
-				system += v.Content
-			}
-			if v.Role == "user" {
-				messages = append(messages, claude.Message{Role: v.Role, Content: v.Content})
-			} else if v.Role == "assistant" {
-				messages = append(messages, claude.Message{Role: v.Role, Content: v.Content})
-			}
-		}
 		maxTokens := 1024
 		if req.MaxToken > 0 {
 			maxTokens = req.MaxToken
@@ -248,6 +220,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 				})
 			}
 		}
+		messages, system := MessagesPopSystemRole(req.Messages)
 		req := claude.ChatCompletionRequest{
 			Model:       a.meta.Model,
 			Messages:    messages,
@@ -416,10 +389,6 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}, nil
 	case "ollama":
 		client := ollama.NewClient(a.meta.EndPoint, a.meta.Model)
-		var messages []ollama.ChatCompletionMessage
-		for _, v := range req.Messages {
-			messages = append(messages, ollama.ChatCompletionMessage{Role: v.Role, Content: v.Content})
-		}
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -433,7 +402,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 		req := ollama.ChatCompletionRequest{
 			Model:    a.meta.Model,
-			Messages: messages,
+			Messages: req.Messages,
 			Options: map[string]interface{}{
 				"temperature": req.Temperature,
 				"num_ctx":     req.MaxToken,
@@ -449,13 +418,9 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		}
 	case "xinference":
 		client := xinference.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.Model)
-		var messages []xinference.ChatCompletionMessage
-		for _, v := range req.Messages {
-			messages = append(messages, xinference.ChatCompletionMessage{Role: v.Role, Content: v.Content})
-		}
 		req := xinference.ChatCompletionRequest{
 			Model:       a.meta.Model,
-			Messages:    messages,
+			Messages:    req.Messages,
 			MaxTokens:   req.MaxToken,
 			Temperature: req.Temperature,
 		}

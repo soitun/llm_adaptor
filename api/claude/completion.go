@@ -13,15 +13,15 @@ import (
 )
 
 type ChatCompletionRequest struct {
-	Model       string    `json:"model"`
-	MaxTokens   int       `json:"max_tokens"`
-	Messages    []Message `json:"messages"`
-	Stream      bool      `json:"stream,omitempty"`
-	Metadata    Metadata  `json:"metadata,omitempty"`
-	System      string    `json:"system,omitempty"`
-	Temperature float64   `json:"temperature,omitempty"`
-	TopP        float32   `json:"top_p,omitempty"`
-	Tools       []Tool    `json:"tools,omitempty"`
+	Model       string   `json:"model"`
+	MaxTokens   int      `json:"max_tokens"`
+	Messages    any      `json:"messages"`
+	Stream      bool     `json:"stream,omitempty"`
+	Metadata    Metadata `json:"metadata,omitempty"`
+	System      string   `json:"system,omitempty"`
+	Temperature float64  `json:"temperature,omitempty"`
+	TopP        float32  `json:"top_p,omitempty"`
+	Tools       []Tool   `json:"tools,omitempty"`
 }
 type Tool struct {
 	Name        string      `json:"name"`
@@ -31,11 +31,6 @@ type Tool struct {
 
 type Metadata struct {
 	UserId string `json:"user_id,omitempty"`
-}
-
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
 }
 
 type ChatCompletionResponse struct {
