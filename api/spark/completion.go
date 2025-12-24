@@ -34,7 +34,7 @@ type TextFunction struct {
 	Parameters  interface{} `json:"parameters"`
 }
 type RequestMessage struct {
-	Text []ChatCompletionRequestMessage `json:"text"`
+	Text any `json:"text"`
 }
 type Chat struct {
 	Domain      string  `json:"domain"`
@@ -43,11 +43,6 @@ type Chat struct {
 	MaxTokens   int     `json:"max_tokens"`
 	Auditing    string  `json:"auditing"`
 	Stream      bool    `json:"stream"`
-}
-
-type ChatCompletionRequestMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
 }
 
 type ChatCompletionResponseMessage struct {

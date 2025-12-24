@@ -39,7 +39,7 @@ type ChatCompletionRequest struct {
 	Tools []interface{} `json:"tools"`
 
 	// Messages is the messages of the chat - can be used to keep a chat memory.
-	Messages []ChatCompletionMessage `json:"messages"`
+	Messages any `json:"messages"`
 
 	// Stream enable streaming of returned response; true by default.
 	Stream *bool `json:"stream,omitempty"`

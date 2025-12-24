@@ -46,22 +46,22 @@ type Thinking struct {
 }
 
 type ChatCompletionRequest struct {
-	Model            string                         `json:"model"`
-	Messages         []ChatCompletionRequestMessage `json:"messages"`
-	Stream           bool                           `json:"stream,omitempty"`
-	StreamOptions    *StreamOptions                 `json:"stream_options,omitempty"`
-	FrequencyPenalty int                            `json:"frequency_penalty,omitempty"`
-	MaxTokens        int                            `json:"max_tokens,omitempty"`
-	N                int                            `json:"n,omitempty"`
-	PresencePenalty  int                            `json:"presence_penalty,omitempty"`
-	ResponseFormat   string                         `json:"response_format,omitempty"`
-	Seed             int                            `json:"seed,omitempty"`
-	Temperature      float64                        `json:"temperature,omitempty"`
-	TopP             int                            `json:"top_p,omitempty"`
-	User             string                         `json:"user,omitempty"`
-	Tools            []interface{}                  `json:"tools"`
-	Thinking         *Thinking                      `json:"thinking,omitempty"`
-	EnableThinking   *bool                          `json:"enable_thinking,omitempty"`
+	Model            string         `json:"model"`
+	Messages         any            `json:"messages"`
+	Stream           bool           `json:"stream,omitempty"`
+	StreamOptions    *StreamOptions `json:"stream_options,omitempty"`
+	FrequencyPenalty int            `json:"frequency_penalty,omitempty"`
+	MaxTokens        int            `json:"max_tokens,omitempty"`
+	N                int            `json:"n,omitempty"`
+	PresencePenalty  int            `json:"presence_penalty,omitempty"`
+	ResponseFormat   string         `json:"response_format,omitempty"`
+	Seed             int            `json:"seed,omitempty"`
+	Temperature      float64        `json:"temperature,omitempty"`
+	TopP             int            `json:"top_p,omitempty"`
+	User             string         `json:"user,omitempty"`
+	Tools            []interface{}  `json:"tools"`
+	Thinking         *Thinking      `json:"thinking,omitempty"`
+	EnableThinking   *bool          `json:"enable_thinking,omitempty"`
 }
 
 type StreamOptions struct {
