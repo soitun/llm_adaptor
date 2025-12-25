@@ -37,8 +37,8 @@ import (
 )
 
 type ZhimaChatCompletionMessage struct {
-	Role             string
-	Content          string
+	Role             string `form:"role" json:"role"`
+	Content          string `form:"content" json:"content"`
 	Function         Function
 	questionMultiple QuestionMultiple
 }
@@ -49,8 +49,8 @@ func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple Questi
 }
 
 type zhimaChatCompletionMessageReal struct {
-	Role     string   `json:"role"`
-	Content  any      `json:"content"`
+	Role     string   `form:"role" json:"role"`
+	Content  any      `form:"content" json:"content"`
 	Function Function `json:"function,omitzero"`
 }
 
