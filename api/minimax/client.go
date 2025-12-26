@@ -13,9 +13,9 @@ type Client struct {
 func NewClient(APIKey string) *Client {
 	return &Client{
 		APIKey:   APIKey,
-		EndPoint: "https://api.minimax.com/v1",
+		EndPoint: "https://api.minimaxi.com/v1",
 		OpenAIClient: &openai.Client{
-			EndPoint: "https://api.minimax.com/v1",
+			EndPoint: "https://api.minimaxi.com/v1",
 			APIKey:   APIKey,
 			ErrResp:  &openai.ErrorResponse{},
 		},
