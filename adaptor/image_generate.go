@@ -4,7 +4,9 @@ package adaptor
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 )
 
@@ -75,6 +77,79 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			InputToken:  res.Usage.TotalTokens - res.Usage.OutputTokens,
 			OutputToken: res.Usage.OutputTokens,
 			Datas:       datas,
+		}, nil
+	case "ali":
+		client := ali.NewClient(a.meta.APIKey)
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			client.EndPoint = a.meta.EndPoint
+		}
+
+		req := &ali.QwenImageGenerationRequest{
+			Model: a.meta.Model,
+			Input: ali.QwenImageInput{
+				Messages: []ali.QwenImageMessage{
+					{
+						Role: "user",
+						Content: []ali.QwenImageContent{
+							{Text: params.Prompt},
+						},
+					},
+				},
+			},
+		}
+
+		var p ali.QwenImageGenParameter
+		var hasParam bool
+		if params.Size != nil {
+			p.Size = params.Size
+			hasParam = true
+		}
+		if params.Watermark != nil {
+			p.Watermark = params.Watermark
+			hasParam = true
+		}
+		if params.Seed != nil {
+			p.Seed = params.Seed
+			hasParam = true
+		}
+		if params.OptimizePromptMode != nil {
+			extend := *params.OptimizePromptMode != "off"
+			p.PromptExtend = &extend
+			hasParam = true
+		}
+		if hasParam {
+			req.Parameters = &p
+		}
+
+		res, err := client.CreateQwenImageGeneration(req)
+		if err != nil {
+			return &ZhimaImageGenerationResp{}, err
+		}
+
+		var imageURL string
+		if len(res.Output.Choices) > 0 && len(res.Output.Choices[0].Message.Content) > 0 {
+			imageURL = res.Output.Choices[0].Message.Content[0].Image
+		}
+		if imageURL == "" {
+			return &ZhimaImageGenerationResp{}, errors.New("ali qwen-image response missing image url")
+		}
+
+		size := ""
+		if params.Size != nil {
+			size = *params.Size
+		}
+		return &ZhimaImageGenerationResp{
+			InputToken:  0,
+			OutputToken: 0,
+			Datas: []*ImageGenerationData{
+				{
+					Url:     imageURL,
+					B64Json: "",
+					Size:    size,
+					Error:   DataError{},
+					Ext:     "png",
+				},
+			},
 		}, nil
 	default:
 		return &ZhimaImageGenerationResp{}, errors.New("corp not support")

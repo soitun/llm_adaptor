@@ -4,6 +4,7 @@ package adaptor
 
 import (
 	"errors"
+	"io"
 
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 )
@@ -34,7 +35,33 @@ func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*Z
 		return &ZhimaImageGenerationStreamRes{
 			&OpenAIImageGenerationStreamResult{stream, `jpeg`},
 		}, nil
+	case "ali":
+		resp, err := a.CreateImageGenerate(params)
+		if err != nil {
+			return &ZhimaImageGenerationStreamRes{}, err
+		}
+		return &ZhimaImageGenerationStreamRes{
+			&SingleImageGenerationStream{resp: *resp},
+		}, nil
 	default:
 		return &ZhimaImageGenerationStreamRes{}, errors.New("corp not support")
 	}
+}
+
+type SingleImageGenerationStream struct {
+	resp ZhimaImageGenerationResp
+	done bool
+}
+
+func (s *SingleImageGenerationStream) Read() (ZhimaImageGenerationResp, error) {
+	if s.done {
+		return ZhimaImageGenerationResp{}, io.EOF
+	}
+	s.done = true
+	return s.resp, nil
+}
+
+func (s *SingleImageGenerationStream) Close() error {
+	s.done = true
+	return nil
 }
