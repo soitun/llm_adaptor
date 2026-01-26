@@ -36,7 +36,7 @@ func TestAliQwenImageGenerations(t *testing.T) {
 
 	resp, err := client.CreateImageGenerate(&adaptor.ZhimaImageGenerationReq{
 		Prompt:             "生成一张海边日落的图片，写实风格",
-		Size:               getString("1664*928"),
+		Size:               getString("2K"),
 		Watermark:          getBool(false),
 		OptimizePromptMode: getString("standard"),
 	})
@@ -51,6 +51,25 @@ func TestAliQwenImageGenerations(t *testing.T) {
 	}
 	if resp.Datas[0].Ext != "png" {
 		t.Fatalf("unexpected ext: %s", resp.Datas[0].Ext)
+	}
+	if resp.Datas[0].Size != "1664*928" {
+		t.Fatalf("unexpected mapped size for 2K: %s", resp.Datas[0].Size)
+	}
+
+	resp2, err := client.CreateImageGenerate(&adaptor.ZhimaImageGenerationReq{
+		Prompt:             "生成一张海边日落的图片，写实风格",
+		Size:               getString("2048x2048"),
+		Watermark:          getBool(false),
+		OptimizePromptMode: getString("standard"),
+	})
+	if err != nil {
+		t.Fatalf("CreateImageGenerate error: %v", err)
+	}
+	if resp2 == nil || len(resp2.Datas) != 1 {
+		t.Fatalf("unexpected resp: %+v", resp2)
+	}
+	if resp2.Datas[0].Size != "1328*1328" {
+		t.Fatalf("unexpected mapped size for 2048x2048: %s", resp2.Datas[0].Size)
 	}
 }
 

@@ -3,8 +3,12 @@
 package adaptor
 
 import (
+	"encoding/base64"
 	"errors"
+	"io"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
@@ -97,29 +101,7 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 				},
 			},
 		}
-
-		var p ali.QwenImageGenParameter
-		var hasParam bool
-		if params.Size != nil {
-			p.Size = params.Size
-			hasParam = true
-		}
-		if params.Watermark != nil {
-			p.Watermark = params.Watermark
-			hasParam = true
-		}
-		if params.Seed != nil {
-			p.Seed = params.Seed
-			hasParam = true
-		}
-		if params.OptimizePromptMode != nil {
-			extend := *params.OptimizePromptMode != "off"
-			p.PromptExtend = &extend
-			hasParam = true
-		}
-		if hasParam {
-			req.Parameters = &p
-		}
+		mappedSize := formatAliQwenImageParams(params, req)
 
 		res, err := client.CreateQwenImageGeneration(req)
 		if err != nil {
@@ -134,9 +116,13 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			return &ZhimaImageGenerationResp{}, errors.New("ali qwen-image response missing image url")
 		}
 
-		size := ""
-		if params.Size != nil {
-			size = *params.Size
+		b64 := ""
+		if params.ResponseFormat != nil && *params.ResponseFormat == "b64_json" {
+			b64, err = downloadImageAsBase64(imageURL)
+			if err != nil {
+				return &ZhimaImageGenerationResp{}, err
+			}
+			imageURL = ""
 		}
 		return &ZhimaImageGenerationResp{
 			InputToken:  0,
@@ -144,8 +130,8 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			Datas: []*ImageGenerationData{
 				{
 					Url:     imageURL,
-					B64Json: "",
-					Size:    size,
+					B64Json: b64,
+					Size:    mappedSize,
 					Error:   DataError{},
 					Ext:     "png",
 				},
@@ -154,6 +140,123 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 	default:
 		return &ZhimaImageGenerationResp{}, errors.New("corp not support")
 	}
+}
+
+func formatAliQwenImageParams(params *ZhimaImageGenerationReq, req *ali.QwenImageGenerationRequest) string {
+	mappedSize := ""
+	var p ali.QwenImageGenParameter
+	var hasParam bool
+	if params.Size != nil && strings.TrimSpace(*params.Size) != "" {
+		mappedSize = mapAliImageSize(*params.Size)
+		size := mappedSize
+		p.Size = &size
+		hasParam = true
+	}
+	if params.Watermark != nil {
+		p.Watermark = params.Watermark
+		hasParam = true
+	}
+	if params.Seed != nil {
+		p.Seed = params.Seed
+		hasParam = true
+	}
+	if params.OptimizePromptMode != nil {
+		extend := *params.OptimizePromptMode != "off"
+		p.PromptExtend = &extend
+		hasParam = true
+	}
+	if hasParam {
+		req.Parameters = &p
+	}
+	return mappedSize
+}
+
+func mapAliImageSize(size string) string {
+	s := strings.TrimSpace(size)
+	if s == "" {
+		return "1664*928"
+	}
+	switch strings.ToUpper(s) {
+	case "2K":
+		return "1664*928"
+	case "4K":
+		return "1328*1328"
+	}
+	s = strings.NewReplacer("x", "*", "X", "*", "×", "*").Replace(s)
+	parts := strings.Split(s, "*")
+	if len(parts) != 2 {
+		return "1664*928"
+	}
+	w, okW := atoi(parts[0])
+	h, okH := atoi(parts[1])
+	if !okW || !okH || w <= 0 || h <= 0 {
+		return "1664*928"
+	}
+	r := float64(w) / float64(h)
+
+	type cand struct {
+		size  string
+		ratio float64
+		pix   int
+	}
+	cands := []cand{
+		{size: "1664*928", ratio: 1664.0 / 928.0, pix: 1664 * 928},
+		{size: "1472*1104", ratio: 1472.0 / 1104.0, pix: 1472 * 1104},
+		{size: "1328*1328", ratio: 1, pix: 1328 * 1328},
+		{size: "1104*1472", ratio: 1104.0 / 1472.0, pix: 1104 * 1472},
+		{size: "928*1664", ratio: 928.0 / 1664.0, pix: 928 * 1664},
+	}
+
+	best := cands[0]
+	bestDiff := absFloat(r - best.ratio)
+	for i := 1; i < len(cands); i++ {
+		d := absFloat(r - cands[i].ratio)
+		if d < bestDiff || (d == bestDiff && cands[i].pix > best.pix) {
+			best = cands[i]
+			bestDiff = d
+		}
+	}
+	return best.size
+}
+
+func downloadImageAsBase64(url string) (string, error) {
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", errors.New("download image failed")
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(body), nil
+}
+
+func atoi(s string) (int, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, false
+	}
+	n := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c < '0' || c > '9' {
+			return 0, false
+		}
+		n = n*10 + int(c-'0')
+	}
+	return n, true
+}
+
+func absFloat(f float64) float64 {
+	if f < 0 {
+		return -f
+	}
+	return f
 }
 
 func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
