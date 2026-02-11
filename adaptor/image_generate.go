@@ -57,7 +57,7 @@ type ZhimaImageGenerationResp struct {
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
 	switch a.meta.Corp {
 	case "302ai":
-		apiUrl := "https://api.302ai.cn/v1/302/images/generations"
+		apiUrl := "https://api.302ai.cn/302/images/generations"
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
 			`model`:  a.meta.Model,
