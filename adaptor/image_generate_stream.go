@@ -35,7 +35,7 @@ func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*Z
 			return &ZhimaImageGenerationStreamRes{}, err
 		}
 		return &ZhimaImageGenerationStreamRes{
-			&OpenAIImageGenerationStreamResult{stream, `jpeg`},
+			&OpenAIImageGenerationStreamResult{stream, *params.OutputFormat},
 		}, nil
 	case "doubao":
 		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)

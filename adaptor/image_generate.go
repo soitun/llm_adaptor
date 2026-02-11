@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
@@ -75,6 +76,7 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			datas[i] = &ImageGenerationData{
 				Url:     item.Url,
 				B64Json: item.B64Json,
+				Ext:     *params.OutputFormat,
 			}
 		}
 		return &ZhimaImageGenerationResp{
@@ -333,6 +335,9 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 		req[`response_format`] = *params.ResponseFormat
 	}
 	if params.OutputFormat != nil {
+		req[`output_format`] = params.OutputFormat
+	} else {
+		params.OutputFormat = tea.String(`jpeg`)
 		req[`output_format`] = params.OutputFormat
 	}
 }
