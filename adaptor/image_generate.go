@@ -35,6 +35,7 @@ type ZhimaImageGenerationReq struct {
 	OptimizePromptMode        *string   `json:"optimize_prompt_mode"`
 	Seed                      *int      `json:"seed"`
 	GuidanceScale             *float32  `json:"guidance_scale"`
+	OutputFormat              *string   `json:"output_format"`
 }
 
 type DataError struct {
@@ -330,5 +331,8 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	}
 	if params.ResponseFormat != nil {
 		req[`response_format`] = *params.ResponseFormat
+	}
+	if params.OutputFormat != nil {
+		req[`output_format`] = params.OutputFormat
 	}
 }
