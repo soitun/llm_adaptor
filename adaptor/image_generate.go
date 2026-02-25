@@ -328,7 +328,7 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	}
 	if params.SequentialImageGeneration != nil {
 		if *params.SequentialImageGeneration == `auto` {
-			req[`n `] = params.MaxImages
+			req[`n`] = params.MaxImages
 		}
 	}
 	if params.ResponseFormat != nil {
