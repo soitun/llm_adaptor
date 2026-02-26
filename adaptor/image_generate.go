@@ -295,7 +295,7 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	if params.Image != nil {
 		req[`image`] = *params.Image
 	}
-	if params.Size != nil {
+	if params.Size != nil && *params.Size != "auto" {
 		req[`size`] = *params.Size
 	}
 	if params.SequentialImageGeneration != nil {
@@ -323,7 +323,7 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 }
 
 func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
-	if params.Size != nil {
+	if params.Size != nil && *params.Size != "auto" {
 		req[`size`] = *params.Size
 	}
 	if params.SequentialImageGeneration != nil {
