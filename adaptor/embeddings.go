@@ -273,6 +273,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "jina":
 		client := jina.NewClient(a.meta.APIKey)
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		}
 		r := jina.EmbeddingRequest{
 			Input:        []string{req.Input},
 			Model:        a.meta.Model,
