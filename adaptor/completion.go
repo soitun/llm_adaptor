@@ -144,11 +144,16 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	logs.Debug(`function_tools:%s`, jsonStr)
 
 	switch a.meta.Corp {
-	case "openai", "302ai":
+	case "openai", "302ai", "openrouter":
 		apiUrl := "https://api.openai.com/v1"
 		switch a.meta.Corp {
 		case "302ai":
 			apiUrl = "https://api.302ai.cn/v1"
+		case "openrouter":
+			apiUrl = "https://openrouter.ai/api/v1"
+		}
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			apiUrl = strings.TrimSpace(a.meta.EndPoint)
 		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		var tools []interface{}
