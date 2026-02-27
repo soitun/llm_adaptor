@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
@@ -26,6 +27,7 @@ func HttpPost(url string, headers []Header, params []Param, body any) (response 
 	if err != nil {
 		return
 	}
+	logs.Debug(`request HttpPost url %s`, url)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return
@@ -58,6 +60,7 @@ func HttpPost(url string, headers []Header, params []Param, body any) (response 
 }
 
 func HttpStreamPost(url string, headers []Header, params []Param, request any) (response *http.Response, err error) {
+	logs.Debug(`request HttpStreamPost url %s`, url)
 	newHeaders := append(headers,
 		Header{Key: "Accept", Value: "text/event-stream"},
 		Header{Key: "Cache-Control", Value: "no-cache"},

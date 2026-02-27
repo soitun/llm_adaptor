@@ -142,7 +142,7 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	logs.Debug(`messages:%s`, jsonStr)
 	jsonStr, _ = tool.JsonEncodeIndent(req.FunctionTools, ``, "\t")
 	logs.Debug(`function_tools:%s`, jsonStr)
-
+	logs.Debug(`CreateChatCompletion endpoint %s`, a.meta.EndPoint)
 	switch a.meta.Corp {
 	case "openai":
 		apiUrl := "https://api.openai.com/v1"

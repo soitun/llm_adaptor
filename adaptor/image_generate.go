@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 )
@@ -54,6 +55,7 @@ type ZhimaImageGenerationResp struct {
 }
 
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
+	logs.Debug(`CreateEmbeddings endpoint %s`, a.meta.EndPoint)
 	switch a.meta.Corp {
 	case "doubao":
 		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"

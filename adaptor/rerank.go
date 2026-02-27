@@ -4,7 +4,9 @@ package adaptor
 
 import (
 	"sort"
+	"strings"
 
+	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/go_tools/msql"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
@@ -33,6 +35,7 @@ type ZhimaRerankResp struct {
 }
 
 func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) {
+	logs.Debug(`CreateRerank endpoint %s`, a.meta.EndPoint)
 	zhimaRes := ZhimaRerankResp{}
 	switch a.meta.Corp {
 	case "baai":
@@ -55,6 +58,9 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		}
 		req := cohere.ReRankRequest{
 			Model:     a.meta.Model,
 			Query:     params.Query,
@@ -73,6 +79,9 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "jina":
 		client := jina.NewClient(a.meta.APIKey)
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		}
 		req := jina.ReRankRequest{
 			Model:     a.meta.Model,
 			Query:     params.Query,
@@ -129,6 +138,10 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			client.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		}
 		req := &ali.CreateRerankReq{
 			Model: a.meta.Model,
 			Input: ali.Input{
