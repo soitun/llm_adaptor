@@ -4,6 +4,7 @@ package adaptor
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
@@ -55,7 +56,11 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 
 	switch a.meta.Corp {
 	case "openai":
-		client := openai.NewClient("https://api.openai.com/v1", a.meta.APIKey, &openai.ErrorResponse{})
+		apiUrl := "https://api.openai.com/v1"
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			apiUrl = strings.TrimSpace(a.meta.EndPoint)
+		}
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -84,19 +89,54 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 	case "ali", "baichuan", "moonshot", "lingyiwanwu", "deepseek", "zhipu", "minimax", "openaiAgent", "siliconflow":
 		var client *openai.Client
 		if a.meta.Corp == "ali" {
-			client = ali.NewClient(a.meta.APIKey).OpenAIClient
+			c := ali.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "baichuan" {
-			client = baichuan.NewClient(a.meta.APIKey).OpenAIClient
+			c := baichuan.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "moonshot" {
-			client = moonshot.NewClient(a.meta.APIKey).OpenAIClient
+			c := moonshot.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "lingyiwanwu" {
-			client = lingyiwanwu.NewClient(a.meta.APIKey).OpenAIClient
+			c := lingyiwanwu.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "deepseek" {
-			client = deepseek.NewClient(a.meta.APIKey).OpenAIClient
+			c := deepseek.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "zhipu" {
-			client = zhipu.NewClient(a.meta.APIKey).OpenAIClient
+			c := zhipu.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "minimax" {
-			client = minimax.NewClient(a.meta.APIKey).OpenAIClient
+			c := minimax.NewClient(a.meta.APIKey)
+			if strings.TrimSpace(a.meta.EndPoint) != "" {
+				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "openaiAgent" {
 			client = openaiagent.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
 		} else if a.meta.Corp == "siliconflow" {
@@ -259,7 +299,11 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 			&GeminiStreamResult{stream},
 		}
 	case "doubao":
-		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
+		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			baseUrl = strings.TrimSpace(a.meta.EndPoint)
+		}
+		client := volcenginev3.NewClient(baseUrl, a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{

@@ -56,7 +56,11 @@ type ZhimaImageGenerationResp struct {
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
 	switch a.meta.Corp {
 	case "doubao":
-		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
+		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
+		if strings.TrimSpace(a.meta.EndPoint) != "" {
+			baseUrl = strings.TrimSpace(a.meta.EndPoint)
+		}
+		client := volcenginev3.NewClient(baseUrl+"/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{
 			`model`:  a.meta.Model,
 			`prompt`: params.Prompt,
