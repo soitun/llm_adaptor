@@ -21,9 +21,13 @@ type ZhimaImageGenerationStreamRes struct {
 }
 
 func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationStreamRes, error) {
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	switch a.meta.Corp {
 	case "302ai":
 		apiUrl := "https://api.302ai.cn/302/images/generations"
+		if len(a.meta.EndPoint) > 0 {
+			apiUrl = GenerateImageClientEndPoint(a)
+		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
 			`model`:  a.meta.Model,
@@ -40,8 +44,8 @@ func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*Z
 		}, nil
 	case "doubao":
 		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			baseUrl = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			baseUrl = GenerateImageClientEndPoint(a)
 		}
 		client := volcenginev3.NewClient(baseUrl+"/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{

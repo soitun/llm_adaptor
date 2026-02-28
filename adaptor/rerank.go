@@ -35,6 +35,7 @@ type ZhimaRerankResp struct {
 }
 
 func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) {
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	logs.Debug(`CreateRerank endpoint %s`, a.meta.EndPoint)
 	zhimaRes := ZhimaRerankResp{}
 	switch a.meta.Corp {
@@ -58,8 +59,8 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
 		}
 		req := cohere.ReRankRequest{
 			Model:     a.meta.Model,
@@ -79,8 +80,8 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "jina":
 		client := jina.NewClient(a.meta.APIKey)
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
 		}
 		req := jina.ReRankRequest{
 			Model:     a.meta.Model,
@@ -138,9 +139,8 @@ func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) 
 		}
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
-			client.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, client.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
 		}
 		req := &ali.CreateRerankReq{
 			Model: a.meta.Model,

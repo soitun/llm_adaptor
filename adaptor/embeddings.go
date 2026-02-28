@@ -44,14 +44,11 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 	if req.Input == "" {
 		return ZhimaEmbeddingResponse{}, errors.New("input empty")
 	}
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	logs.Debug(`CreateEmbeddings endpoint %s`, a.meta.EndPoint)
 	switch a.meta.Corp {
 	case "openai":
-		apiUrl := "https://api.openai.com/v1"
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			apiUrl = strings.TrimSpace(a.meta.EndPoint)
-		}
-		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		r := openai.EmbeddingRequest{
 			Model: a.meta.Model,
 			Input: []string{req.Input},
@@ -69,16 +66,14 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		var client *openai.Client
 		if a.meta.Corp == "baichuan" {
 			c := baichuan.NewClient(a.meta.APIKey)
-			if strings.TrimSpace(a.meta.EndPoint) != "" {
-				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
-				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
 			}
 			client = c.OpenAIClient
 		} else if a.meta.Corp == "zhipu" {
 			c := zhipu.NewClient(a.meta.APIKey)
-			if strings.TrimSpace(a.meta.EndPoint) != "" {
-				c.EndPoint = strings.TrimSpace(a.meta.EndPoint)
-				c.OpenAIClient.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
 			}
 			client = c.OpenAIClient
 		} else if a.meta.Corp == "openaiAgent" {
@@ -136,6 +131,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		dimension := a.meta.Dimension
 		if dimension == 0 {
 			dimension = 1536
@@ -180,6 +178,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			a.meta.APIKey,
 			a.meta.Model,
 		)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		r := gemini.EmbeddingRequest{
 			Content: gemini.Content{Parts: []gemini.Part{{Text: req.Input}}},
 		}
@@ -208,8 +209,8 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "doubao":
 		baseUrl := `https://ark.cn-beijing.volces.com/api/v3`
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			baseUrl = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			baseUrl, _ = GenerateClientEndPoint(a)
 		}
 		var client *arkruntime.Client
 		if len(a.meta.SecretKey) == 0 {
@@ -240,6 +241,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		r := cohere.EmbeddingRequest{
 			Texts:     []string{req.Input},
 			Model:     a.meta.Model,
@@ -273,8 +277,8 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "jina":
 		client := jina.NewClient(a.meta.APIKey)
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			client.EndPoint = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint = a.meta.EndPoint
 		}
 		r := jina.EmbeddingRequest{
 			Input:        []string{req.Input},

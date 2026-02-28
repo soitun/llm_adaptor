@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/alibabacloud-go/tea/tea"
-	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/openai"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
@@ -58,9 +57,13 @@ type ZhimaImageGenerationResp struct {
 }
 
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	switch a.meta.Corp {
 	case "302ai":
 		apiUrl := "https://api.302ai.cn/302/images/generations"
+		if len(a.meta.EndPoint) > 0 {
+			apiUrl = GenerateImageClientEndPoint(a)
+		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
 			`model`:  a.meta.Model,
@@ -87,8 +90,8 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 		}, nil
 	case "doubao":
 		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			baseUrl = strings.TrimSpace(a.meta.EndPoint)
+		if len(a.meta.EndPoint) > 0 {
+			baseUrl = GenerateImageClientEndPoint(a)
 		}
 		client := volcenginev3.NewClient(baseUrl+"/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{
@@ -118,8 +121,8 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 		}, nil
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			client.EndPoint = a.meta.EndPoint
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint = GenerateImageClientEndPoint(a)
 		}
 
 		req := &ali.QwenImageGenerationRequest{
@@ -345,4 +348,16 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 		params.OutputFormat = tea.String(`jpeg`)
 		req[`output_format`] = params.OutputFormat
 	}
+}
+
+func GenerateImageClientEndPoint(a *Adaptor) string {
+	switch a.meta.Corp {
+	case "302ai":
+		return a.meta.EndPoint + `/302/images/generations`
+	case "doubao":
+		return a.meta.EndPoint + `/api/v3`
+	case "ali":
+		return a.meta.EndPoint
+	}
+	return ``
 }
