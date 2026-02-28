@@ -10,7 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
+	"github.com/zhimaAi/llm_adaptor/api/openai"
 	"github.com/zhimaAi/llm_adaptor/api/volcenginev3"
 )
 
@@ -34,6 +36,7 @@ type ZhimaImageGenerationReq struct {
 	OptimizePromptMode        *string   `json:"optimize_prompt_mode"`
 	Seed                      *int      `json:"seed"`
 	GuidanceScale             *float32  `json:"guidance_scale"`
+	OutputFormat              *string   `json:"output_format"`
 }
 
 type DataError struct {
@@ -55,6 +58,32 @@ type ZhimaImageGenerationResp struct {
 
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
 	switch a.meta.Corp {
+	case "302ai":
+		apiUrl := "https://api.302ai.cn/302/images/generations"
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		req := map[string]any{
+			`model`:  a.meta.Model,
+			`prompt`: params.Prompt,
+			`stream`: false,
+		}
+		formatOpenaiParams(params, req)
+		res, err := client.CreateImageGenerate(req)
+		if err != nil {
+			return &ZhimaImageGenerationResp{}, err
+		}
+		datas := make([]*ImageGenerationData, len(res.Data))
+		for i, item := range res.Data {
+			datas[i] = &ImageGenerationData{
+				Url:     item.Url,
+				B64Json: item.B64Json,
+				Ext:     *params.OutputFormat,
+			}
+		}
+		return &ZhimaImageGenerationResp{
+			InputToken:  res.Usage.TotalTokens - res.Usage.OutputTokens,
+			OutputToken: res.Usage.OutputTokens,
+			Datas:       datas,
+		}, nil
 	case "doubao":
 		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{
@@ -266,7 +295,7 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	if params.Image != nil {
 		req[`image`] = *params.Image
 	}
-	if params.Size != nil {
+	if params.Size != nil && *params.Size != "auto" {
 		req[`size`] = *params.Size
 	}
 	if params.SequentialImageGeneration != nil {
@@ -290,5 +319,25 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 		req[`optimize_prompt_options`] = map[string]any{
 			`mode `: *params.OptimizePromptMode,
 		}
+	}
+}
+
+func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
+	if params.Size != nil && *params.Size != "auto" {
+		req[`size`] = *params.Size
+	}
+	if params.SequentialImageGeneration != nil {
+		if *params.SequentialImageGeneration == `auto` {
+			req[`n`] = params.MaxImages
+		}
+	}
+	if params.ResponseFormat != nil {
+		req[`response_format`] = *params.ResponseFormat
+	}
+	if params.OutputFormat != nil {
+		req[`output_format`] = params.OutputFormat
+	} else {
+		params.OutputFormat = tea.String(`jpeg`)
+		req[`output_format`] = params.OutputFormat
 	}
 }
