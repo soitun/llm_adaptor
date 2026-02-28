@@ -55,8 +55,12 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 	var result *ZhimaChatCompletionStreamResponse
 
 	switch a.meta.Corp {
-	case "openai":
+	case "openai", "302ai":
 		apiUrl := "https://api.openai.com/v1"
+		switch a.meta.Corp {
+		case "302ai":
+			apiUrl = "https://api.302ai.cn/v1"
+		}
 		if strings.TrimSpace(a.meta.EndPoint) != "" {
 			apiUrl = strings.TrimSpace(a.meta.EndPoint)
 		}
