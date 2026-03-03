@@ -61,7 +61,7 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 	case "302ai", "openrouter":
 		apiUrl := "https://api.302ai.cn/302/images/generations"
 		if a.meta.Corp == "openrouter" {
-			apiUrl = "https://openrouter.ai/api/v1/images/generations"
+			apiUrl = "https://openrouter.ai/api/v1/chat/completions"
 		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
