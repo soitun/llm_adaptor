@@ -11,7 +11,6 @@ import (
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
-	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/azure"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
@@ -45,7 +44,6 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		return ZhimaEmbeddingResponse{}, errors.New("input empty")
 	}
 	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
-	logs.Debug(`CreateEmbeddings endpoint %s`, a.meta.EndPoint)
 	switch a.meta.Corp {
 	case "openai":
 		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})

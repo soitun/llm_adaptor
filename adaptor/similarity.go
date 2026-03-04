@@ -3,7 +3,6 @@
 package adaptor
 
 import (
-	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
 )
 
@@ -18,7 +17,6 @@ type ZhimaSimilarityResponse struct {
 }
 
 func (a *Adaptor) CreateSimilarity(req ZhimaSimilarityRequest) (ZhimaSimilarityResponse, error) {
-	logs.Debug(`CreateSimilarity endpoint %s`, a.meta.EndPoint)
 	switch a.meta.Corp {
 	case "baai":
 		client := baai.NewClient(a.meta.EndPoint, a.meta.Model, a.meta.APIKey)

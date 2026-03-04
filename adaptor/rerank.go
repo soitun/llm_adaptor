@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/zhimaAi/go_tools/logs"
 	"github.com/zhimaAi/go_tools/msql"
 	"github.com/zhimaAi/llm_adaptor/api/ali"
 	"github.com/zhimaAi/llm_adaptor/api/baai"
@@ -36,7 +35,6 @@ type ZhimaRerankResp struct {
 
 func (a *Adaptor) CreateRerank(params *ZhimaRerankReq) (ZhimaRerankResp, error) {
 	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
-	logs.Debug(`CreateRerank endpoint %s`, a.meta.EndPoint)
 	zhimaRes := ZhimaRerankResp{}
 	switch a.meta.Corp {
 	case "baai":
