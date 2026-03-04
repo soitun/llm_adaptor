@@ -129,7 +129,7 @@ func (r *OpenAIChatCompletionImageStreamResult) Read() (ZhimaImageGenerationResp
 	}
 
 	return ZhimaImageGenerationResp{
-		InputToken:  promptTokens - completionTokens,
+		InputToken:  promptTokens,
 		OutputToken: completionTokens,
 		Datas:       datas,
 	}, nil

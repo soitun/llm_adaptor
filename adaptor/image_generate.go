@@ -114,7 +114,7 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 
 		}
 		return &ZhimaImageGenerationResp{
-			InputToken:  res.Usage.PromptTokens - res.Usage.CompletionTokens,
+			InputToken:  res.Usage.PromptTokens,
 			OutputToken: res.Usage.CompletionTokens,
 			Datas:       datas,
 		}, nil
