@@ -17,11 +17,19 @@ type ChatCompletionRequestMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
+type ChatCompletionResponseImageUrl struct {
+	Url string `json:"url"`
+}
+type ChatCompletionResponseImage struct {
+	Type     string                         `json:"type"`
+	ImageUrl ChatCompletionResponseImageUrl `json:"image_url"`
+}
 type ChatCompletionResponseMessage struct {
-	Role             string     `json:"role"`
-	Content          string     `json:"content"`
-	ReasoningContent string     `json:"reasoning_content"`
-	ToolCalls        []ToolCall `json:"tool_calls"`
+	Role             string                        `json:"role"`
+	Content          string                        `json:"content"`
+	ReasoningContent string                        `json:"reasoning_content"`
+	ToolCalls        []ToolCall                    `json:"tool_calls"`
+	Images           []ChatCompletionResponseImage `json:"images"`
 }
 
 type ToolCall struct {
@@ -62,6 +70,8 @@ type ChatCompletionRequest struct {
 	Tools            []interface{}  `json:"tools"`
 	Thinking         *Thinking      `json:"thinking,omitempty"`
 	EnableThinking   *bool          `json:"enable_thinking,omitempty"`
+	Modalities       []string       `json:"modalities"`   //openrouter
+	ImageConfig      any            `json:"image_config"` //openrouter
 }
 
 type StreamOptions struct {

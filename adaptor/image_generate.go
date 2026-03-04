@@ -84,6 +84,33 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			OutputToken: res.Usage.OutputTokens,
 			Datas:       datas,
 		}, nil
+	case "openrouter":
+		apiUrl := "https://openrouter.ai/api/v1"
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		req := buildOpenRouterImageRequest(a.meta.Model, params, false)
+		res, err := client.CreateChatCompletion(req)
+		if err != nil {
+			return &ZhimaImageGenerationResp{}, err
+		}
+		datas := make([]*ImageGenerationData, 0)
+		for _, choice := range res.Choices {
+			if len(choice.Message.Images) > 0 {
+				for _, image := range choice.Message.Images {
+					ext, b64Content := parseDataURL(image.ImageUrl.Url)
+					datas = append(datas, &ImageGenerationData{
+						Url:     ``,
+						B64Json: b64Content,
+						Ext:     ext,
+					})
+				}
+			}
+
+		}
+		return &ZhimaImageGenerationResp{
+			InputToken:  res.Usage.PromptTokens - res.Usage.CompletionTokens,
+			OutputToken: res.Usage.CompletionTokens,
+			Datas:       datas,
+		}, nil
 	case "doubao":
 		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{
@@ -317,7 +344,7 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	}
 	if params.OptimizePromptMode != nil {
 		req[`optimize_prompt_options`] = map[string]any{
-			`mode `: *params.OptimizePromptMode,
+			`mode`: *params.OptimizePromptMode,
 		}
 	}
 }
@@ -340,4 +367,84 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 		params.OutputFormat = tea.String(`jpeg`)
 		req[`output_format`] = params.OutputFormat
 	}
+}
+
+// buildOpenRouterImageRequest builds the ChatCompletionRequest for OpenRouter image generation
+func buildOpenRouterImageRequest(model string, params *ZhimaImageGenerationReq, stream bool) openai.ChatCompletionRequest {
+	message := map[string]any{
+		`role`: `user`,
+	}
+	if params.Image != nil && len(*params.Image) > 0 {
+		content := make([]map[string]any, 0)
+		content = append(content, map[string]any{
+			`type`: `text`,
+			`text`: params.Prompt,
+		})
+		for _, image := range *params.Image {
+			content = append(content, map[string]any{
+				`type`: `image_url`,
+				`image_url`: map[string]any{
+					`url`: image,
+				},
+			})
+		}
+		message[`content`] = content
+	} else {
+		message[`content`] = params.Prompt
+	}
+
+	req := openai.ChatCompletionRequest{
+		Model:      model,
+		Messages:   []map[string]any{message},
+		Stream:     stream,
+		Modalities: []string{`image`},
+	}
+	//just allow 1K 2K 4K ...
+	if params.Size != nil && *params.Size != `` && *params.Size != `auto` {
+		req.ImageConfig = map[string]any{
+			`image_size`: *params.Size,
+		}
+	}
+	return req
+}
+
+// parseDataURL parses data URL format and returns (ext, base64Content)
+// e.g., "data:image/jpeg;base64,/9j/4AAQ..." -> ("jpeg", "/9j/4AAQ...")
+func parseDataURL(dataURL string) (string, string) {
+	// check if it's a data URL format
+	if !strings.HasPrefix(dataURL, "data:") {
+		return "", dataURL
+	}
+
+	// find the comma that separates header from content
+	commaIdx := strings.Index(dataURL, ",")
+	if commaIdx == -1 {
+		return "", dataURL
+	}
+
+	header := dataURL[5:commaIdx] // remove "data:" prefix
+	content := dataURL[commaIdx+1:]
+
+	// parse MIME type from header (e.g., "image/jpeg;base64" -> "image/jpeg")
+	mimeType := header
+	if semiIdx := strings.Index(mimeType, ";"); semiIdx != -1 {
+		mimeType = mimeType[:semiIdx]
+	}
+
+	// extract extension from MIME type
+	var ext string
+	switch mimeType {
+	case "image/jpeg":
+		ext = "jpeg"
+	case "image/png":
+		ext = "png"
+	case "image/webp":
+		ext = "webp"
+	case "image/gif":
+		ext = "gif"
+	default:
+		ext = ""
+	}
+
+	return ext, content
 }

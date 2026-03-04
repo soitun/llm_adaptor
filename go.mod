@@ -3,6 +3,7 @@ module github.com/zhimaAi/llm_adaptor
 go 1.24.0
 
 require (
+	github.com/alibabacloud-go/tea v1.4.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1210
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan v1.0.1200
@@ -11,9 +12,12 @@ require (
 	github.com/zhimaAi/go_tools v0.0.0-20250925081513-2ba58ff32b01
 )
 
+require github.com/kr/pretty v0.3.1 // indirect
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/graphics-go v0.0.0-20160129215708-b43f31a4a966 // indirect
+	github.com/alibabacloud-go/debug v1.0.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v3.0.2+incompatible // indirect
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -22,8 +26,11 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/htruong/go-md2 v0.0.0-20170914203617-c69905b63f6f // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/sftp v1.13.9 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
