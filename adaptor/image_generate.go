@@ -90,6 +90,9 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 		}, nil
 	case "openrouter":
 		apiUrl := "https://openrouter.ai/api/v1"
+		if len(a.meta.EndPoint) > 0 {
+			apiUrl = GenerateImageClientEndPoint(a)
+		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := buildOpenRouterImageRequest(a.meta.Model, params, false)
 		res, err := client.CreateChatCompletion(req)
@@ -465,6 +468,8 @@ func GenerateImageClientEndPoint(a *Adaptor) string {
 		return a.meta.EndPoint + `/api/v3`
 	case "ali":
 		return a.meta.EndPoint
+	case "openrouter":
+		return a.meta.EndPoint + `/api/v1`
 	}
 	return ``
 }

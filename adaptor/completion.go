@@ -144,9 +144,9 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	logs.Debug(`function_tools:%s`, jsonStr)
 	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	switch a.meta.Corp {
-	case "openai", "302ai":
-		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
+	case "openai", "302ai", "openrouter":
 		var tools []interface{}
+		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
 				`type`: `function`,
@@ -709,7 +709,7 @@ func GenerateOpenAiApiUrl(a *Adaptor) string {
 	case "302ai":
 		endPoint = "https://api.302ai.cn"
 	case "openrouter":
-	    endPoint = "https://openrouter.ai/api/v1"
+		endPoint = "https://openrouter.ai/api"
 	}
 	if len(a.meta.EndPoint) > 0 {
 		endPoint = a.meta.EndPoint
