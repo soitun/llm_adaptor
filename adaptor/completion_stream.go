@@ -56,7 +56,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 	var result *ZhimaChatCompletionStreamResponse
 
 	switch a.meta.Corp {
-	case "openai", "302ai":
+	case "openai", "302ai","openrouter":
 		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		var tools []interface{}
 		for _, v := range req.FunctionTools {

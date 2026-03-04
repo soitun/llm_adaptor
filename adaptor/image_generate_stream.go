@@ -42,6 +42,18 @@ func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*Z
 		return &ZhimaImageGenerationStreamRes{
 			&OpenAIImageGenerationStreamResult{stream, *params.OutputFormat},
 		}, nil
+	case "openrouter":
+		apiUrl := "https://openrouter.ai/api/v1"
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		req := buildOpenRouterImageRequest(a.meta.Model, params, true)
+		stream, err := client.CreateChatCompletionStream(req)
+		if err != nil {
+			return &ZhimaImageGenerationStreamRes{}, err
+		}
+		return &ZhimaImageGenerationStreamRes{
+			&OpenAIChatCompletionImageStreamResult{stream, ``},
+		}, nil
+
 	case "doubao":
 		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
 		if len(a.meta.EndPoint) > 0 {

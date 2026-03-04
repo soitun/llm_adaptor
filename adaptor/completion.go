@@ -708,6 +708,8 @@ func GenerateOpenAiApiUrl(a *Adaptor) string {
 	switch a.meta.Corp {
 	case "302ai":
 		endPoint = "https://api.302ai.cn"
+	case "openrouter":
+	    endPoint = "https://openrouter.ai/api/v1"
 	}
 	if len(a.meta.EndPoint) > 0 {
 		endPoint = a.meta.EndPoint
