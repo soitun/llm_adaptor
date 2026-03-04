@@ -5,6 +5,7 @@ package adaptor
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	tencentHunyuan "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/hunyuan/v20230901"
@@ -42,10 +43,10 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 	if req.Input == "" {
 		return ZhimaEmbeddingResponse{}, errors.New("input empty")
 	}
-
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	switch a.meta.Corp {
 	case "openai":
-		client := openai.NewClient("https://api.openai.com/v1", a.meta.APIKey, &openai.ErrorResponse{})
+		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		r := openai.EmbeddingRequest{
 			Model: a.meta.Model,
 			Input: []string{req.Input},
@@ -62,9 +63,17 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 	case "baichuan", "zhipu", "openaiAgent":
 		var client *openai.Client
 		if a.meta.Corp == "baichuan" {
-			client = baichuan.NewClient(a.meta.APIKey).OpenAIClient
+			c := baichuan.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "zhipu" {
-			client = zhipu.NewClient(a.meta.APIKey).OpenAIClient
+			c := zhipu.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "openaiAgent" {
 			client = openaiagent.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
 		}
@@ -120,6 +129,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "ali":
 		client := ali.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		dimension := a.meta.Dimension
 		if dimension == 0 {
 			dimension = 1536
@@ -164,6 +176,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			a.meta.APIKey,
 			a.meta.Model,
 		)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		r := gemini.EmbeddingRequest{
 			Content: gemini.Content{Parts: []gemini.Part{{Text: req.Input}}},
 		}
@@ -191,14 +206,18 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 			CompletionToken: res.Usage.TotalTokens - res.Usage.PromptTokens,
 		}, nil
 	case "doubao":
+		baseUrl := `https://ark.cn-beijing.volces.com/api/v3`
+		if len(a.meta.EndPoint) > 0 {
+			baseUrl, _ = GenerateClientEndPoint(a)
+		}
 		var client *arkruntime.Client
 		if len(a.meta.SecretKey) == 0 {
 			client = arkruntime.NewClientWithApiKey(a.meta.APIKey,
-				arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
+				arkruntime.WithBaseUrl(baseUrl),
 				arkruntime.WithRegion(a.meta.Region))
 		} else {
 			client = arkruntime.NewClientWithAkSk(a.meta.APIKey, a.meta.SecretKey,
-				arkruntime.WithBaseUrl(`https://ark.cn-beijing.volces.com/api/v3`),
+				arkruntime.WithBaseUrl(baseUrl),
 				arkruntime.WithRegion(a.meta.Region))
 		}
 		res, err := client.CreateEmbeddings(context.Background(),
@@ -220,6 +239,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		r := cohere.EmbeddingRequest{
 			Texts:     []string{req.Input},
 			Model:     a.meta.Model,
@@ -253,6 +275,9 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}, nil
 	case "jina":
 		client := jina.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint = a.meta.EndPoint
+		}
 		r := jina.EmbeddingRequest{
 			Input:        []string{req.Input},
 			Model:        a.meta.Model,

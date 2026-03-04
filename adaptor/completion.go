@@ -142,21 +142,11 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	logs.Debug(`messages:%s`, jsonStr)
 	jsonStr, _ = tool.JsonEncodeIndent(req.FunctionTools, ``, "\t")
 	logs.Debug(`function_tools:%s`, jsonStr)
-
+	a.meta.EndPoint = strings.TrimRight(strings.TrimSpace(a.meta.EndPoint), `/`)
 	switch a.meta.Corp {
 	case "openai", "302ai", "openrouter":
-		apiUrl := "https://api.openai.com/v1"
-		switch a.meta.Corp {
-		case "302ai":
-			apiUrl = "https://api.302ai.cn/v1"
-		case "openrouter":
-			apiUrl = "https://openrouter.ai/api/v1"
-		}
-		if strings.TrimSpace(a.meta.EndPoint) != "" {
-			apiUrl = strings.TrimSpace(a.meta.EndPoint)
-		}
-		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		var tools []interface{}
+		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
 				`type`: `function`,
@@ -196,19 +186,47 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	case "ali", "baichuan", "moonshot", "lingyiwanwu", "deepseek", "zhipu", "minimax", "openaiAgent", "siliconflow":
 		var client *openai.Client
 		if a.meta.Corp == "ali" {
-			client = ali.NewClient(a.meta.APIKey).OpenAIClient
+			c := ali.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "baichuan" {
-			client = baichuan.NewClient(a.meta.APIKey).OpenAIClient
+			c := baichuan.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "moonshot" {
-			client = moonshot.NewClient(a.meta.APIKey).OpenAIClient
+			c := moonshot.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "lingyiwanwu" {
-			client = lingyiwanwu.NewClient(a.meta.APIKey).OpenAIClient
+			c := lingyiwanwu.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "deepseek" {
-			client = deepseek.NewClient(a.meta.APIKey).OpenAIClient
+			c := deepseek.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "zhipu" {
-			client = zhipu.NewClient(a.meta.APIKey).OpenAIClient
+			c := zhipu.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "minimax" {
-			client = minimax.NewClient(a.meta.APIKey).OpenAIClient
+			c := minimax.NewClient(a.meta.APIKey)
+			if len(a.meta.EndPoint) > 0 {
+				c.EndPoint, c.OpenAIClient.EndPoint = GenerateClientEndPoint(a)
+			}
+			client = c.OpenAIClient
 		} else if a.meta.Corp == "openaiAgent" {
 			client = openaiagent.NewClient(a.meta.EndPoint, a.meta.APIKey, a.meta.APIVersion).OpenAIClient
 		} else if a.meta.Corp == "siliconflow" {
@@ -384,6 +402,9 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}, nil
 	case "claude":
 		client := claude.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		maxTokens := 1024
 		if req.MaxToken > 0 {
 			maxTokens = req.MaxToken
@@ -429,6 +450,9 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}, nil
 	case "gemini":
 		client := gemini.NewClient(a.meta.APIKey, a.meta.Model)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 		var contents []gemini.Content
 		for _, v := range req.Messages {
 			if v.Role == "user" || v.Role == "system" {
@@ -451,7 +475,11 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 			CompletionToken: res.UsageMetadata.CandidatesTokenCount,
 		}, nil
 	case "doubao":
-		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
+		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
+		if len(a.meta.EndPoint) > 0 {
+			baseUrl, _ = GenerateClientEndPoint(a)
+		}
+		client := volcenginev3.NewClient(baseUrl, a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
 			tools = append(tools, map[string]interface{}{
@@ -499,6 +527,9 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		}, nil
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
+		if len(a.meta.EndPoint) > 0 {
+			client.EndPoint, _ = GenerateClientEndPoint(a)
+		}
 
 		var histories []cohere.ChatHistory
 		n := len(req.Messages)
@@ -670,4 +701,34 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 	}
 
 	return ZhimaChatCompletionResponse{}, nil
+}
+
+func GenerateOpenAiApiUrl(a *Adaptor) string {
+	endPoint := "https://api.openai.com"
+	switch a.meta.Corp {
+	case "302ai":
+		endPoint = "https://api.302ai.cn"
+	case "openrouter":
+		endPoint = "https://openrouter.ai/api"
+	}
+	if len(a.meta.EndPoint) > 0 {
+		endPoint = a.meta.EndPoint
+	}
+	return endPoint + "/v1"
+}
+
+func GenerateClientEndPoint(a *Adaptor) (string, string) {
+	switch a.meta.Corp {
+	case "ali":
+		return a.meta.EndPoint, a.meta.EndPoint + `/compatible-mode/v1`
+	case "openai", "302ai", "baichuan", "moonshot", "lingyiwanwu", "gemini", "jina":
+		return a.meta.EndPoint + `/v1`, a.meta.EndPoint + `/v1`
+	case "zhipu":
+		return a.meta.EndPoint + `/api/paas/v4`, a.meta.EndPoint + `/api/paas/v4`
+	case "deepseek", "minimax", "baidu", "claude", "cohere", "ollama":
+		return a.meta.EndPoint, a.meta.EndPoint
+	case "doubao":
+		return a.meta.EndPoint + `/api/v3`, ``
+	}
+	return ``, ``
 }
