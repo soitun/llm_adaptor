@@ -90,3 +90,46 @@ func (r *OpenAIImageGenerationStreamResult) Read() (ZhimaImageGenerationResp, er
 		Datas:       datas,
 	}, nil
 }
+
+// OpenAIChatCompletionImageStreamResult is a wrapper for chat completion stream that returns images
+type OpenAIChatCompletionImageStreamResult struct {
+	*openai.ChatCompletionStream
+	Ext string
+}
+
+func (r *OpenAIChatCompletionImageStreamResult) Read() (ZhimaImageGenerationResp, error) {
+	responseOpenAI, err := r.Recv()
+	if err != nil {
+		return ZhimaImageGenerationResp{}, err
+	}
+
+	var promptTokens int
+	var completionTokens int
+	if responseOpenAI.Usage.PromptTokens > 0 {
+		promptTokens = responseOpenAI.Usage.PromptTokens
+	}
+	if responseOpenAI.Usage.CompletionTokens > 0 {
+		completionTokens = responseOpenAI.Usage.CompletionTokens
+	}
+
+	datas := make([]*ImageGenerationData, 0)
+	if len(responseOpenAI.Choices) > 0 {
+		for _, choice := range responseOpenAI.Choices {
+			if len(choice.Delta.Images) > 0 {
+				for _, image := range choice.Delta.Images {
+					datas = append(datas, &ImageGenerationData{
+						Url:     ``,
+						B64Json: image.ImageUrl.Url,
+						Ext:     `png`,
+					})
+				}
+			}
+		}
+	}
+
+	return ZhimaImageGenerationResp{
+		InputToken:  promptTokens - completionTokens,
+		OutputToken: completionTokens,
+		Datas:       datas,
+	}, nil
+}

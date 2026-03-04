@@ -58,11 +58,8 @@ type ZhimaImageGenerationResp struct {
 
 func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationResp, error) {
 	switch a.meta.Corp {
-	case "302ai", "openrouter":
+	case "302ai":
 		apiUrl := "https://api.302ai.cn/302/images/generations"
-		if a.meta.Corp == "openrouter" {
-			apiUrl = "https://openrouter.ai/api/v1/chat/completions"
-		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
 			`model`:  a.meta.Model,
@@ -85,6 +82,32 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 		return &ZhimaImageGenerationResp{
 			InputToken:  res.Usage.TotalTokens - res.Usage.OutputTokens,
 			OutputToken: res.Usage.OutputTokens,
+			Datas:       datas,
+		}, nil
+	case "openrouter":
+		apiUrl := "https://openrouter.ai/api/v1/chat/completions"
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		req := buildOpenRouterImageRequest(a.meta.Model, params, false)
+		res, err := client.CreateChatCompletion(req)
+		if err != nil {
+			return &ZhimaImageGenerationResp{}, err
+		}
+		datas := make([]*ImageGenerationData, 0)
+		for _, choice := range res.Choices {
+			if len(choice.Message.Images) > 0 {
+				for _, image := range choice.Message.Images {
+					datas = append(datas, &ImageGenerationData{
+						Url:     ``,
+						B64Json: image.ImageUrl.Url,
+						Ext:     `png`,
+					})
+				}
+			}
+
+		}
+		return &ZhimaImageGenerationResp{
+			InputToken:  res.Usage.PromptTokens - res.Usage.CompletionTokens,
+			OutputToken: res.Usage.CompletionTokens,
 			Datas:       datas,
 		}, nil
 	case "doubao":
@@ -343,4 +366,43 @@ func formatOpenaiParams(params *ZhimaImageGenerationReq, req map[string]any) {
 		params.OutputFormat = tea.String(`jpeg`)
 		req[`output_format`] = params.OutputFormat
 	}
+}
+
+// buildOpenRouterImageRequest builds the ChatCompletionRequest for OpenRouter image generation
+func buildOpenRouterImageRequest(model string, params *ZhimaImageGenerationReq, stream bool) openai.ChatCompletionRequest {
+	message := map[string]any{
+		`role`: `user`,
+	}
+	if params.Image != nil && len(*params.Image) > 0 {
+		content := make([]map[string]any, 0)
+		content = append(content, map[string]any{
+			`type`: `text`,
+			`text`: params.Prompt,
+		})
+		for _, image := range *params.Image {
+			content = append(content, map[string]any{
+				`type`: `image_url`,
+				`image_url`: map[string]any{
+					`url`: image,
+				},
+			})
+		}
+		message[`content`] = content
+	} else {
+		message[`content`] = params.Prompt
+	}
+
+	req := openai.ChatCompletionRequest{
+		Model:      model,
+		Messages:   []map[string]any{message},
+		Stream:     stream,
+		Modalities: []string{`image`},
+	}
+	//just allow 1K 2K 4K ...
+	if params.Size != nil && *params.Size != `` && *params.Size != `auto` {
+		req.ImageConfig = map[string]any{
+			`image_size`: *params.Size,
+		}
+	}
+	return req
 }

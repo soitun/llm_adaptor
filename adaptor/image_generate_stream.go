@@ -21,11 +21,8 @@ type ZhimaImageGenerationStreamRes struct {
 
 func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*ZhimaImageGenerationStreamRes, error) {
 	switch a.meta.Corp {
-	case "302ai", "openrouter":
+	case "302ai":
 		apiUrl := "https://api.302ai.cn/302/images/generations"
-		if a.meta.Corp == "openrouter" {
-			apiUrl = "https://openrouter.ai/api/v1/chat/completions"
-		}
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := map[string]any{
 			`model`:  a.meta.Model,
@@ -40,6 +37,18 @@ func (a *Adaptor) CreateImageGenerateStream(params *ZhimaImageGenerationReq) (*Z
 		return &ZhimaImageGenerationStreamRes{
 			&OpenAIImageGenerationStreamResult{stream, *params.OutputFormat},
 		}, nil
+	case "openrouter":
+		apiUrl := "https://openrouter.ai/api/v1"
+		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
+		req := buildOpenRouterImageRequest(a.meta.Model, params, true)
+		stream, err := client.CreateChatCompletionStream(req)
+		if err != nil {
+			return &ZhimaImageGenerationStreamRes{}, err
+		}
+		return &ZhimaImageGenerationStreamRes{
+			&OpenAIChatCompletionImageStreamResult{stream, ``},
+		}, nil
+
 	case "doubao":
 		client := volcenginev3.NewClient("https://ark.cn-beijing.volces.com/api/v3/images/generations", a.meta.Model, a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		req := map[string]any{
