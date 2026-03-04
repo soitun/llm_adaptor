@@ -85,7 +85,7 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 			Datas:       datas,
 		}, nil
 	case "openrouter":
-		apiUrl := "https://openrouter.ai/api/v1/chat/completions"
+		apiUrl := "https://openrouter.ai/api/v1"
 		client := openai.NewClient(apiUrl, a.meta.APIKey, &openai.ErrorResponse{})
 		req := buildOpenRouterImageRequest(a.meta.Model, params, false)
 		res, err := client.CreateChatCompletion(req)
@@ -344,7 +344,7 @@ func formatDoubaoParams(params *ZhimaImageGenerationReq, req map[string]any) {
 	}
 	if params.OptimizePromptMode != nil {
 		req[`optimize_prompt_options`] = map[string]any{
-			`mode `: *params.OptimizePromptMode,
+			`mode`: *params.OptimizePromptMode,
 		}
 	}
 }
