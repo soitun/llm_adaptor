@@ -117,10 +117,11 @@ func (r *OpenAIChatCompletionImageStreamResult) Read() (ZhimaImageGenerationResp
 		for _, choice := range responseOpenAI.Choices {
 			if len(choice.Delta.Images) > 0 {
 				for _, image := range choice.Delta.Images {
+					ext, b64Content := parseDataURL(image.ImageUrl.Url)
 					datas = append(datas, &ImageGenerationData{
 						Url:     ``,
-						B64Json: image.ImageUrl.Url,
-						Ext:     `png`,
+						B64Json: b64Content,
+						Ext:     ext,
 					})
 				}
 			}

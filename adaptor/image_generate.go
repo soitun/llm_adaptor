@@ -96,10 +96,11 @@ func (a *Adaptor) CreateImageGenerate(params *ZhimaImageGenerationReq) (*ZhimaIm
 		for _, choice := range res.Choices {
 			if len(choice.Message.Images) > 0 {
 				for _, image := range choice.Message.Images {
+					ext, b64Content := parseDataURL(image.ImageUrl.Url)
 					datas = append(datas, &ImageGenerationData{
 						Url:     ``,
-						B64Json: image.ImageUrl.Url,
-						Ext:     `png`,
+						B64Json: b64Content,
+						Ext:     ext,
 					})
 				}
 			}
@@ -405,4 +406,45 @@ func buildOpenRouterImageRequest(model string, params *ZhimaImageGenerationReq, 
 		}
 	}
 	return req
+}
+
+// parseDataURL parses data URL format and returns (ext, base64Content)
+// e.g., "data:image/jpeg;base64,/9j/4AAQ..." -> ("jpeg", "/9j/4AAQ...")
+func parseDataURL(dataURL string) (string, string) {
+	// check if it's a data URL format
+	if !strings.HasPrefix(dataURL, "data:") {
+		return "", dataURL
+	}
+
+	// find the comma that separates header from content
+	commaIdx := strings.Index(dataURL, ",")
+	if commaIdx == -1 {
+		return "", dataURL
+	}
+
+	header := dataURL[5:commaIdx] // remove "data:" prefix
+	content := dataURL[commaIdx+1:]
+
+	// parse MIME type from header (e.g., "image/jpeg;base64" -> "image/jpeg")
+	mimeType := header
+	if semiIdx := strings.Index(mimeType, ";"); semiIdx != -1 {
+		mimeType = mimeType[:semiIdx]
+	}
+
+	// extract extension from MIME type
+	var ext string
+	switch mimeType {
+	case "image/jpeg":
+		ext = "jpeg"
+	case "image/png":
+		ext = "png"
+	case "image/webp":
+		ext = "webp"
+	case "image/gif":
+		ext = "gif"
+	default:
+		ext = ""
+	}
+
+	return ext, content
 }
