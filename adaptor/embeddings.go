@@ -134,7 +134,11 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}
 		dimension := a.meta.Dimension
 		if dimension == 0 {
-			dimension = 1536
+			if a.meta.Model == `text-embedding-v3` {
+				dimension = 1024 // should be in [64, 128, 256, 512, 768, 1024]
+			} else {
+				dimension = 1536
+			}
 		}
 		textType := a.meta.TextType
 		if textType == "" {
@@ -151,8 +155,8 @@ func (a *Adaptor) CreateEmbeddings(req ZhimaEmbeddingRequest) (ZhimaEmbeddingRes
 		}
 		return ZhimaEmbeddingResponse{
 			Result:          res.Output.Embeddings[0].Embedding,
-			PromptToken:     0,
-			CompletionToken: res.Usage.TotalTokens,
+			PromptToken:     res.Usage.TotalTokens,
+			CompletionToken: 0,
 		}, nil
 	case "voyage":
 		client := voyage.NewClient(
