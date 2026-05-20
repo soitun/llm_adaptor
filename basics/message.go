@@ -1,0 +1,88 @@
+// Copyright © 2016- 2025 Wuhan Sesame Small Customer Service Network Technology Co., Ltd.
+
+package basics
+
+type Message struct {
+	MessageRole
+	MessageContent
+	MessageOther
+}
+
+type MessageRole struct {
+	Role RoleType `form:"role" json:"role"`
+}
+
+type MessageContent struct {
+	Content string `form:"content" json:"content"`
+}
+
+type MessageOther struct {
+	Name             string         `json:"name,omitempty"`
+	ToolCalls        []ToolCall     `json:"tool_calls,omitempty"`
+	ToolCallID       string         `json:"tool_call_id,omitempty"`
+	ToolName         string         `json:"tool_name,omitempty"`
+	ResponseMeta     *ResponseMeta  `json:"response_meta,omitempty"`
+	ReasoningContent string         `json:"reasoning_content,omitempty"`
+	Extra            map[string]any `json:"extra,omitempty"`
+}
+
+type RoleType = string
+
+const (
+	Assistant RoleType = "assistant"
+	User      RoleType = "user"
+	System    RoleType = "system"
+	Tool      RoleType = "tool"
+)
+
+type ToolCall struct {
+	Index    *int           `json:"index,omitempty"`
+	ID       string         `json:"id"`
+	Type     string         `json:"type"`
+	Function FunctionCall   `json:"function"`
+	Extra    map[string]any `json:"extra,omitempty"`
+}
+
+type FunctionCall struct {
+	Name      string `json:"name,omitempty"`
+	Arguments string `json:"arguments,omitempty"`
+}
+
+type ResponseMeta struct {
+	FinishReason string      `json:"finish_reason,omitempty"`
+	Usage        *TokenUsage `json:"usage,omitempty"`
+	LogProbs     *LogProbs   `json:"logprobs,omitempty"`
+}
+
+type TokenUsage struct {
+	PromptTokens            int                     `json:"prompt_tokens"`
+	PromptTokenDetails      PromptTokenDetails      `json:"prompt_token_details"`
+	CompletionTokens        int                     `json:"completion_tokens"`
+	TotalTokens             int                     `json:"total_tokens"`
+	CompletionTokensDetails CompletionTokensDetails `json:"completion_token_details"`
+}
+
+type PromptTokenDetails struct {
+	CachedTokens int `json:"cached_tokens"`
+}
+
+type CompletionTokensDetails struct {
+	ReasoningTokens int `json:"reasoning_tokens,omitempty"`
+}
+
+type LogProbs struct {
+	Content []LogProb `json:"content"`
+}
+
+type LogProb struct {
+	Token       string       `json:"token"`
+	LogProb     float64      `json:"logprob"`
+	Bytes       []int64      `json:"bytes,omitempty"`
+	TopLogProbs []TopLogProb `json:"top_logprobs"`
+}
+
+type TopLogProb struct {
+	Token   string  `json:"token"`
+	LogProb float64 `json:"logprob"`
+	Bytes   []int64 `json:"bytes,omitempty"`
+}
