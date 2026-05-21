@@ -2,20 +2,6 @@
 
 package basics
 
-type Message struct {
-	MessageRole
-	MessageContent
-	MessageOther
-}
-
-type MessageRole struct {
-	Role RoleType `form:"role" json:"role"`
-}
-
-type MessageContent struct {
-	Content string `form:"content" json:"content"`
-}
-
 type MessageOther struct {
 	Name             string         `json:"name,omitempty"`
 	ToolCalls        []ToolCall     `json:"tool_calls,omitempty"`

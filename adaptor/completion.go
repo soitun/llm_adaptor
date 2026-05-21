@@ -37,8 +37,10 @@ import (
 )
 
 type ZhimaChatCompletionMessage struct {
-	basics.Message
+	Role             basics.RoleType `form:"role" json:"role"`
+	Content          string          `form:"content" json:"content"`
 	questionMultiple QuestionMultiple
+	basics.MessageOther
 }
 
 func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple QuestionMultiple) {
@@ -47,14 +49,14 @@ func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple Questi
 }
 
 type zhimaChatCompletionMessageReal struct {
-	basics.MessageRole
-	Content any `form:"content" json:"content"`
+	Role    basics.RoleType `form:"role" json:"role"`
+	Content any             `form:"content" json:"content"`
 	basics.MessageOther
 }
 
 func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	message := zhimaChatCompletionMessageReal{
-		MessageRole:  m.MessageRole,
+		Role:         m.Role,
 		Content:      m.Content,
 		MessageOther: m.MessageOther,
 	}
@@ -81,7 +83,7 @@ func (m *ZhimaChatCompletionMessage) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &message); err != nil {
 		return err
 	}
-	m.MessageRole = message.MessageRole
+	m.Role = message.Role
 	if content, ok := message.Content.(string); ok {
 		m.Content = content
 	} else {
