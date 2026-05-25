@@ -37,10 +37,10 @@ import (
 )
 
 type ZhimaChatCompletionMessage struct {
-	Role             string `form:"role" json:"role"`
-	Content          string `form:"content" json:"content"`
-	Function         Function
+	Role             basics.RoleType `form:"role" json:"role"`
+	Content          string          `form:"content" json:"content"`
 	questionMultiple QuestionMultiple
+	basics.MessageOther
 }
 
 func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple QuestionMultiple) {
@@ -49,16 +49,16 @@ func (m *ZhimaChatCompletionMessage) SetQuestionMultiple(questionMultiple Questi
 }
 
 type zhimaChatCompletionMessageReal struct {
-	Role     string   `form:"role" json:"role"`
-	Content  any      `form:"content" json:"content"`
-	Function Function `json:"function,omitzero"`
+	Role    basics.RoleType `form:"role" json:"role"`
+	Content any             `form:"content" json:"content"`
+	basics.MessageOther
 }
 
 func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	message := zhimaChatCompletionMessageReal{
-		Role:     m.Role,
-		Content:  m.Content,
-		Function: m.Function,
+		Role:         m.Role,
+		Content:      m.Content,
+		MessageOther: m.MessageOther,
 	}
 	if len(m.questionMultiple) > 0 {
 		message.Content = m.questionMultiple
@@ -69,7 +69,7 @@ func (m *ZhimaChatCompletionMessage) MarshalJSON() ([]byte, error) {
 func MessagesPopSystemRole(messages []ZhimaChatCompletionMessage) ([]ZhimaChatCompletionMessage, string) {
 	newMsgs, system := make([]ZhimaChatCompletionMessage, 0), ``
 	for i := range messages {
-		if messages[i].Role == `system` {
+		if messages[i].Role == basics.System {
 			system += messages[i].Content
 		} else {
 			newMsgs = append(newMsgs, messages[i])
@@ -93,13 +93,8 @@ func (m *ZhimaChatCompletionMessage) UnmarshalJSON(data []byte) error {
 		}
 		m.Content = string(bs)
 	}
-	m.Function = message.Function
+	m.MessageOther = message.MessageOther
 	return nil
-}
-
-type Function struct {
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
 }
 
 type ZhimaChatCompletionRequest struct {
@@ -107,13 +102,14 @@ type ZhimaChatCompletionRequest struct {
 	MaxToken      int                          `json:"max_token,omitzero"`
 	Temperature   float64                      `json:"temperature,omitzero"`
 	FunctionTools []FunctionTool               `json:"function_tools,omitzero"`
-	Tools         []FunctionTool               `json:"tools,omitzero"`
 }
+
 type FunctionTool struct {
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	Parameters  Parameters `json:"parameters"`
 }
+
 type Parameters struct {
 	Type       string      `json:"type"`
 	Properties interface{} `json:"properties"`
@@ -128,6 +124,7 @@ type ZhimaChatCompletionResponse struct {
 	IsValidFunctionCall bool               `json:"is_valid_function_call"`
 	ReasoningContent    string             `json:"reasoning_content"`
 }
+
 type FunctionToolCall struct {
 	Name      string `json:"name"`
 	Arguments string `json:"arguments"`
