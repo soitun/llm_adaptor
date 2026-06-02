@@ -67,11 +67,11 @@ type ChatCompletionRequest struct {
 	Temperature      float64        `json:"temperature,omitempty"`
 	TopP             int            `json:"top_p,omitempty"`
 	User             string         `json:"user,omitempty"`
-	Tools            []interface{}  `json:"tools"`
+	Tools            []interface{}  `json:"tools,omitempty"`
 	Thinking         *Thinking      `json:"thinking,omitempty"`
 	EnableThinking   *bool          `json:"enable_thinking,omitempty"`
-	Modalities       []string       `json:"modalities"`   //openrouter
-	ImageConfig      any            `json:"image_config"` //openrouter
+	Modalities       []string       `json:"modalities,omitempty"`   //openrouter
+	ImageConfig      any            `json:"image_config,omitempty"` //openrouter
 }
 
 type StreamOptions struct {
