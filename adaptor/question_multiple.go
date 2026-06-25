@@ -19,7 +19,7 @@ type InputAudio struct {
 	Format string `json:"format"`
 }
 
-type VedioUrl struct {
+type VideoUrl struct {
 	Url string `json:"url"`
 }
 
@@ -28,5 +28,5 @@ type QuestionMultiple []struct {
 	Text       string     `json:"text,omitzero"`
 	ImageUrl   ImageUrl   `json:"image_url,omitzero"`
 	InputAudio InputAudio `json:"input_audio,omitzero"`
-	VedioUrl   VedioUrl   `json:"vedio_url,omitzero"`
+	VideoUrl   VideoUrl   `json:"video_url,omitzero"`
 }
