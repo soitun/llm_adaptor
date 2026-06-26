@@ -122,10 +122,12 @@ type ZhimaChatCompletionResponse struct {
 	CompletionToken int              `json:"completion_token"`
 	ToolCalls       basics.ToolCalls `json:"tool_calls,omitempty"`
 	// Deprecated: use ToolCalls directly for full metadata or ToolCalls.FunctionToolCalls for the legacy projection.
-	FunctionToolCalls   []basics.FunctionToolCall `json:"function_tool_calls"`
-	IsValidFunctionCall bool                      `json:"is_valid_function_call"`
-	ReasoningContent    string                    `json:"reasoning_content"`
+	FunctionToolCalls   []FunctionToolCall `json:"function_tool_calls"`
+	IsValidFunctionCall bool               `json:"is_valid_function_call"`
+	ReasoningContent    string             `json:"reasoning_content"`
 }
+
+type FunctionToolCall = basics.FunctionToolCall
 
 func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaChatCompletionResponse, error) {
 	if len(req.Messages) == 0 {

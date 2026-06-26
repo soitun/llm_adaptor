@@ -115,7 +115,7 @@ func (c *ChatCompletionStream) Recv() (ChatCompletionStreamResponse, error) {
 			c.StreamReader.IsFinished = true
 			return *new(ChatCompletionStreamResponse), io.EOF
 		}
-		if response.Message.Content == "" && response.Message.ReasoningContent == "" {
+		if response.Message.Content == "" && response.Message.ReasoningContent == "" && len(response.Message.ToolCalls) == 0 {
 			continue
 		}
 		return response, nil
