@@ -2,7 +2,10 @@
 
 package adaptor
 
-import "github.com/zhimaAi/llm_adaptor/api/claude"
+import (
+	"github.com/zhimaAi/llm_adaptor/api/claude"
+	"github.com/zhimaAi/llm_adaptor/basics"
+)
 
 type ClaudeStreamResult struct {
 	*claude.ChatCompletionStream
@@ -13,20 +16,17 @@ func (r *ClaudeStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	if err != nil {
 		return ZhimaChatCompletionResponse{}, err
 	}
-	var functionToolCalls []FunctionToolCall
+	var toolCalls basics.ToolCalls
 	if responseClaude.ContentBlock.Type == `tool_use` {
-		functionToolCalls = append(functionToolCalls, FunctionToolCall{
-			Name: responseClaude.ContentBlock.Name,
-		})
+		toolCalls = append(toolCalls, basics.NewFunctionToolCall(responseClaude.ContentBlock.Id, responseClaude.ContentBlock.Name, ""))
 	}
 	if responseClaude.Delta.Type == `input_json_delta` {
-		functionToolCalls = append(functionToolCalls, FunctionToolCall{
-			Arguments: responseClaude.Delta.PartialJson,
-		})
+		toolCalls = append(toolCalls, basics.NewFunctionToolCall("", "", responseClaude.Delta.PartialJson))
 	}
 	return ZhimaChatCompletionResponse{
 		Result:            responseClaude.Delta.Text,
-		FunctionToolCalls: functionToolCalls,
+		ToolCalls:         toolCalls,
+		FunctionToolCalls: toolCalls.FunctionToolCalls(),
 		PromptToken:       responseClaude.Message.Usage.InputTokens,
 		CompletionToken:   responseClaude.Message.Usage.OutputTokens,
 	}, nil

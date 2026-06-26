@@ -28,18 +28,8 @@ type ChatCompletionResponseMessage struct {
 	Role             string                        `json:"role"`
 	Content          string                        `json:"content"`
 	ReasoningContent string                        `json:"reasoning_content"`
-	ToolCalls        []ToolCall                    `json:"tool_calls"`
+	ToolCalls        basics.ToolCalls              `json:"tool_calls"`
 	Images           []ChatCompletionResponseImage `json:"images"`
-}
-
-type ToolCall struct {
-	Id       string   `json:"id"`
-	Type     string   `json:"type"`
-	Function Function `json:"function"`
-}
-type Function struct {
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
 }
 
 type ThinkingType string

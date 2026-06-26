@@ -14,21 +14,12 @@ import (
 type ImageData []byte
 
 type ChatCompletionMessage struct {
-	Role             string      `json:"role"`
-	Content          string      `json:"content"`
-	Thinking         string      `json:"thinking"`
-	ToolCalls        []ToolCall  `json:"tool_calls"`
-	ReasoningContent string      `json:"reasoning_content"`
-	Images           []ImageData `json:"images,omitempty"`
-}
-
-type ToolCall struct {
-	Function Function `json:"function"`
-}
-
-type Function struct {
-	Name      string `json:"name"`
-	Arguments any    `json:"arguments"`
+	Role             string           `json:"role"`
+	Content          string           `json:"content"`
+	Thinking         string           `json:"thinking"`
+	ToolCalls        basics.ToolCalls `json:"tool_calls"`
+	ReasoningContent string           `json:"reasoning_content"`
+	Images           []ImageData      `json:"images,omitempty"`
 }
 
 type ChatCompletionRequest struct {

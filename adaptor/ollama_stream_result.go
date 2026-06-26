@@ -15,10 +15,13 @@ func (r *OllamaStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	if err != nil {
 		return ZhimaChatCompletionResponse{}, err
 	}
+	toolCalls := responseOllama.Message.ToolCalls
 	return ZhimaChatCompletionResponse{
-		Result:           responseOllama.Message.Content,
-		ReasoningContent: responseOllama.Message.ReasoningContent,
-		PromptToken:      responseOllama.Metrics.PromptEvalCount,
-		CompletionToken:  responseOllama.Metrics.EvalCount,
+		Result:            responseOllama.Message.Content,
+		ReasoningContent:  responseOllama.Message.ReasoningContent,
+		ToolCalls:         toolCalls,
+		FunctionToolCalls: toolCalls.FunctionToolCalls(),
+		PromptToken:       responseOllama.Metrics.PromptEvalCount,
+		CompletionToken:   responseOllama.Metrics.EvalCount,
 	}, nil
 }
