@@ -4,6 +4,7 @@ package adaptor
 
 import (
 	"github.com/zhimaAi/llm_adaptor/api/openai"
+	"github.com/zhimaAi/llm_adaptor/basics"
 )
 
 type OpenAIStreamResult struct {
@@ -25,7 +26,7 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	if responseOpenAI.Usage.CompletionTokens > 0 {
 		completionTokens = responseOpenAI.Usage.CompletionTokens
 	}
-	var functionToolCalls []FunctionToolCall
+	var toolCalls basics.ToolCalls
 	if len(responseOpenAI.Choices) > 0 {
 		result = responseOpenAI.Choices[0].Delta.Content
 		reasoningContent = responseOpenAI.Choices[0].Delta.ReasoningContent
@@ -36,18 +37,14 @@ func (r *OpenAIStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		if responseOpenAI.Choices[0].Usage.CompletionTokens > 0 {
 			completionTokens = responseOpenAI.Choices[0].Usage.CompletionTokens
 		}
-		for _, toolCall := range responseOpenAI.Choices[0].Delta.ToolCalls {
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      toolCall.Function.Name,
-				Arguments: toolCall.Function.Arguments,
-			})
-		}
+		toolCalls = responseOpenAI.Choices[0].Delta.ToolCalls
 	}
 
 	return ZhimaChatCompletionResponse{
 		Result:            result,
 		ReasoningContent:  reasoningContent,
-		FunctionToolCalls: functionToolCalls,
+		ToolCalls:         toolCalls,
+		FunctionToolCalls: toolCalls.FunctionToolCalls(),
 		PromptToken:       promptTokens,
 		CompletionToken:   completionTokens,
 	}, nil

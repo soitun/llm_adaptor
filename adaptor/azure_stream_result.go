@@ -2,7 +2,10 @@
 
 package adaptor
 
-import "github.com/zhimaAi/llm_adaptor/api/azure"
+import (
+	"github.com/zhimaAi/llm_adaptor/api/azure"
+	"github.com/zhimaAi/llm_adaptor/basics"
+)
 
 type AzureStreamResult struct {
 	*azure.ChatCompletionStream
@@ -14,19 +17,15 @@ func (r *AzureStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 		return ZhimaChatCompletionResponse{}, err
 	}
 	var result string
-	var functionToolCalls []FunctionToolCall
+	var toolCalls basics.ToolCalls
 	if len(responseAzure.Choices) > 0 {
 		result = responseAzure.Choices[0].Delta.Content
-		for _, toolCall := range responseAzure.Choices[0].Delta.ToolCalls {
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      toolCall.Function.Name,
-				Arguments: toolCall.Function.Arguments,
-			})
-		}
+		toolCalls = responseAzure.Choices[0].Delta.ToolCalls
 	}
 	return ZhimaChatCompletionResponse{
 		Result:            result,
-		FunctionToolCalls: functionToolCalls,
+		ToolCalls:         toolCalls,
+		FunctionToolCalls: toolCalls.FunctionToolCalls(),
 		PromptToken:       responseAzure.Usage.PromptTokens,
 		CompletionToken:   responseAzure.Usage.CompletionTokens,
 	}, nil

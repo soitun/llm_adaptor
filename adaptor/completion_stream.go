@@ -40,6 +40,12 @@ type ZhimaStreamResult interface {
 
 type ZhimaChatCompletionStreamResponse struct {
 	ZhimaStreamResult
+	extractor  thinkTagExtractor
+	eofFlushed bool
+}
+
+func (r *ZhimaChatCompletionStreamResponse) Read() (ZhimaChatCompletionResponse, error) {
+	return readThinkTaggedStream(r.ZhimaStreamResult, &r.extractor, &r.eofFlushed)
 }
 
 func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*ZhimaChatCompletionStreamResponse, error) {
@@ -56,7 +62,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 	var result *ZhimaChatCompletionStreamResponse
 
 	switch a.meta.Corp {
-	case "openai", "302ai","openrouter":
+	case "openai", "302ai", "openrouter":
 		client := openai.NewClient(GenerateOpenAiApiUrl(a), a.meta.APIKey, &openai.ErrorResponse{})
 		var tools []interface{}
 		for _, v := range req.FunctionTools {
@@ -80,9 +86,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return nil, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&OpenAIStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &OpenAIStreamResult{stream}}
 	case "ali", "baichuan", "moonshot", "lingyiwanwu", "deepseek", "zhipu", "minimax", "openaiAgent", "siliconflow":
 		var client *openai.Client
 		if a.meta.Corp == "ali" {
@@ -160,9 +164,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&OpenAIStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &OpenAIStreamResult{stream}}
 	case "azure":
 		client := azure.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.APIKey, a.meta.Model)
 		var tools []interface{}
@@ -187,9 +189,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&AzureStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &AzureStreamResult{stream}}
 	case "baidu":
 		client := baidu.NewClient(a.meta.APIKey, a.meta.SecretKey, a.meta.Model)
 		var functions []baidu.Function
@@ -231,9 +231,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&BaiduStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &BaiduStreamResult{stream}}
 	case "claude":
 		client := claude.NewClient(a.meta.APIKey)
 		if len(a.meta.EndPoint) > 0 {
@@ -266,9 +264,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&ClaudeStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &ClaudeStreamResult{stream}}
 	case "gemini":
 		client := gemini.NewClient(a.meta.APIKey, a.meta.Model)
 		if len(a.meta.EndPoint) > 0 {
@@ -291,9 +287,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&GeminiStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &GeminiStreamResult{stream}}
 	case "doubao":
 		baseUrl := "https://ark.cn-beijing.volces.com/api/v3"
 		if len(a.meta.EndPoint) > 0 {
@@ -329,9 +323,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return nil, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&OpenAIStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &OpenAIStreamResult{stream}}
 	case "cohere":
 		client := cohere.NewClient(a.meta.APIKey)
 		if len(a.meta.EndPoint) > 0 {
@@ -360,9 +352,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return nil, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&CohereStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &CohereStreamResult{stream}}
 	case "spark":
 		client := spark.NewClient(a.meta.APIKey, a.meta.APPID, a.meta.SecretKey, a.meta.Model)
 		var textFunctions []spark.TextFunction
@@ -395,9 +385,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return nil, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&SparkStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &SparkStreamResult{stream}}
 	case "hunyuan":
 		client := hunyuan.NewClient(a.meta.APIKey, a.meta.SecretKey, a.meta.Region)
 		r := tencentHunyuan.NewChatCompletionsRequest()
@@ -427,9 +415,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return nil, err
 		}
-		return &ZhimaChatCompletionStreamResponse{
-			&TencentStreamResult{stream},
-		}, nil
+		return &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &TencentStreamResult{stream}}, nil
 	case "ollama":
 		client := ollama.NewClient(a.meta.EndPoint, a.meta.Model)
 		var tools []interface{}
@@ -456,9 +442,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&OllamaStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &OllamaStreamResult{stream}}
 	case "xinference":
 		client := xinference.NewClient(a.meta.EndPoint, a.meta.APIVersion, a.meta.Model)
 		req := xinference.ChatCompletionRequest{
@@ -471,9 +455,7 @@ func (a *Adaptor) CreateChatCompletionStream(req ZhimaChatCompletionRequest) (*Z
 		if err != nil {
 			return &ZhimaChatCompletionStreamResponse{}, err
 		}
-		result = &ZhimaChatCompletionStreamResponse{
-			&XinferenceStreamResult{stream},
-		}
+		result = &ZhimaChatCompletionStreamResponse{ZhimaStreamResult: &XinferenceStreamResult{stream}}
 	}
 
 	return result, nil

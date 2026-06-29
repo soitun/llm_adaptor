@@ -117,20 +117,25 @@ type Parameters struct {
 }
 
 type ZhimaChatCompletionResponse struct {
-	Result              string             `json:"result"`
-	PromptToken         int                `json:"prompt_token"`
-	CompletionToken     int                `json:"completion_token"`
+	Result          string           `json:"result"`
+	PromptToken     int              `json:"prompt_token"`
+	CompletionToken int              `json:"completion_token"`
+	ToolCalls       basics.ToolCalls `json:"tool_calls,omitempty"`
+	// Deprecated: use ToolCalls directly for full metadata or ToolCalls.FunctionToolCalls for the legacy projection.
 	FunctionToolCalls   []FunctionToolCall `json:"function_tool_calls"`
 	IsValidFunctionCall bool               `json:"is_valid_function_call"`
 	ReasoningContent    string             `json:"reasoning_content"`
 }
 
-type FunctionToolCall struct {
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
-}
+type FunctionToolCall = basics.FunctionToolCall
 
-func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaChatCompletionResponse, error) {
+func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (resp ZhimaChatCompletionResponse, err error) {
+	defer func() {
+		if err == nil {
+			resp = normalizeThinkTaggedResponse(resp)
+		}
+	}()
+
 	if len(req.Messages) == 0 {
 		return ZhimaChatCompletionResponse{}, errors.New("messages is required")
 	}
@@ -165,18 +170,11 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
-		for _, toolCall := range res.Choices[0].Message.ToolCalls {
-			if toolCall.Type == `function` {
-				functionToolCalls = append(functionToolCalls, FunctionToolCall{
-					Name:      toolCall.Function.Name,
-					Arguments: toolCall.Function.Arguments,
-				})
-			}
-		}
+		toolCalls := res.Choices[0].Message.ToolCalls
 		return ZhimaChatCompletionResponse{
 			Result:            res.Choices[0].Message.Content,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
@@ -257,19 +255,12 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
-		for _, toolCall := range res.Choices[0].Message.ToolCalls {
-			if toolCall.Type == `function` {
-				functionToolCalls = append(functionToolCalls, FunctionToolCall{
-					Name:      toolCall.Function.Name,
-					Arguments: toolCall.Function.Arguments,
-				})
-			}
-		}
+		toolCalls := res.Choices[0].Message.ToolCalls
 		return ZhimaChatCompletionResponse{
 			Result:            res.Choices[0].Message.Content,
 			ReasoningContent:  res.Choices[0].Message.ReasoningContent,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
@@ -297,18 +288,11 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
-		for _, toolCall := range res.Choices[0].Message.ToolCalls {
-			if toolCall.Type == `function` {
-				functionToolCalls = append(functionToolCalls, FunctionToolCall{
-					Name:      toolCall.Function.Name,
-					Arguments: toolCall.Function.Arguments,
-				})
-			}
-		}
+		toolCalls := res.Choices[0].Message.ToolCalls
 		return ZhimaChatCompletionResponse{
 			Result:            res.Choices[0].Message.Content,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
@@ -353,19 +337,12 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
+		var toolCalls basics.ToolCalls
 		if client.ApiVersion == define.ApiVersionV2 && len(res.Choices) > 0 {
 			res.Result = res.Choices[0].Message.Content
 			res.ReasoningContent = res.Choices[0].Message.ReasoningContent
 			if len(tools) > 0 && res.Result == "" {
-				for _, toolCall := range res.Choices[0].Message.ToolCalls {
-					if toolCall.Type == `function` {
-						functionToolCalls = append(functionToolCalls, FunctionToolCall{
-							Name:      toolCall.Function.Name,
-							Arguments: toolCall.Function.Arguments,
-						})
-					}
-				}
+				toolCalls = res.Choices[0].Message.ToolCalls
 			}
 		} else if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
 			arguments := make(map[string]string)
@@ -393,7 +370,8 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		return ZhimaChatCompletionResponse{
 			Result:            res.Result,
 			ReasoningContent:  res.ReasoningContent,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
@@ -429,21 +407,20 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
+		var toolCalls basics.ToolCalls
 		if res.Type == `tool_use` {
 			arguments, err := basics.JsonEncodeStr(res.Content[0].Input)
 			if err != nil {
 				return ZhimaChatCompletionResponse{}, err
 			}
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      res.Content[0].Name,
-				Arguments: arguments,
-			})
+			toolCalls = append(toolCalls, basics.NewFunctionToolCall(res.Content[0].Id, res.Content[0].Name, arguments))
 		}
 		return ZhimaChatCompletionResponse{
-			Result:          res.Content[0].Text,
-			PromptToken:     res.Usage.InputTokens,
-			CompletionToken: res.Usage.OutputTokens,
+			Result:            res.Content[0].Text,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
+			PromptToken:       res.Usage.InputTokens,
+			CompletionToken:   res.Usage.OutputTokens,
 		}, nil
 	case "gemini":
 		client := gemini.NewClient(a.meta.APIKey, a.meta.Model)
@@ -506,19 +483,12 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
-		for _, toolCall := range res.Choices[0].Message.ToolCalls {
-			if toolCall.Type == `function` {
-				functionToolCalls = append(functionToolCalls, FunctionToolCall{
-					Name:      toolCall.Function.Name,
-					Arguments: toolCall.Function.Arguments,
-				})
-			}
-		}
+		toolCalls := res.Choices[0].Message.ToolCalls
 		return ZhimaChatCompletionResponse{
 			Result:            res.Choices[0].Message.Content,
 			ReasoningContent:  res.Choices[0].Message.ReasoningContent,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Usage.PromptTokens,
 			CompletionToken:   res.Usage.CompletionTokens,
 		}, nil
@@ -587,16 +557,14 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if err != nil {
 			return ZhimaChatCompletionResponse{}, err
 		}
-		var functionToolCalls []FunctionToolCall
+		var toolCalls basics.ToolCalls
 		if len(res.Payload.Choices.Text[0].FunctionCall.Name) > 0 {
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      res.Payload.Choices.Text[0].FunctionCall.Name,
-				Arguments: res.Payload.Choices.Text[0].FunctionCall.Arguments,
-			})
+			toolCalls = append(toolCalls, basics.NewFunctionToolCall("", res.Payload.Choices.Text[0].FunctionCall.Name, res.Payload.Choices.Text[0].FunctionCall.Arguments))
 		}
 		return ZhimaChatCompletionResponse{
 			Result:            res.Payload.Choices.Text[0].Content,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.Payload.Usage.Text.PromptTokens,
 			CompletionToken:   res.Payload.Usage.Text.CompletionTokens,
 		}, nil
@@ -664,17 +632,12 @@ func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaCha
 		if len(res.Message.ReasoningContent) == 0 { //兼容处理
 			res.Message.ReasoningContent = res.Message.Thinking
 		}
-		var functionToolCalls []FunctionToolCall
-		for _, toolCall := range res.Message.ToolCalls {
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      toolCall.Function.Name,
-				Arguments: tool.JsonEncodeNoError(toolCall.Function.Arguments),
-			})
-		}
+		toolCalls := res.Message.ToolCalls
 		return ZhimaChatCompletionResponse{
 			Result:            res.Message.Content,
 			ReasoningContent:  res.Message.ReasoningContent,
-			FunctionToolCalls: functionToolCalls,
+			ToolCalls:         toolCalls,
+			FunctionToolCalls: toolCalls.FunctionToolCalls(),
 			PromptToken:       res.PromptEvalCount,
 			CompletionToken:   res.EvalCount,
 		}, nil

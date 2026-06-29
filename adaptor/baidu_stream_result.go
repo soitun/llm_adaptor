@@ -19,21 +19,13 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	if err != nil {
 		return ZhimaChatCompletionResponse{}, err
 	}
-	var functionToolCalls []FunctionToolCall
+	var toolCalls basics.ToolCalls
 	if len(res.Choices) > 0 {
 		res.Result = res.Choices[0].Delta.Content
 		res.ReasoningContent = res.Choices[0].Delta.ReasoningContent
-		for _, toolCall := range res.Choices[0].Delta.ToolCalls {
-			functionToolCalls = append(functionToolCalls, FunctionToolCall{
-				Name:      toolCall.Function.Name,
-				Arguments: toolCall.Function.Arguments,
-			})
-		}
+		toolCalls = res.Choices[0].Delta.ToolCalls
 	} else if len(res.FunctionCall.Name) > 0 || len(res.FunctionCall.Arguments) > 0 {
-		functionToolCalls = append(functionToolCalls, FunctionToolCall{
-			Name:      res.FunctionCall.Name,
-			Arguments: res.FunctionCall.Arguments,
-		})
+		toolCalls = append(toolCalls, basics.NewFunctionToolCall("", res.FunctionCall.Name, res.FunctionCall.Arguments))
 		if strings.Contains(res.FunctionCall.Thoughts, `prompt`) {
 			arguments := make(map[string]string)
 			err := basics.JsonDecode([]byte(res.FunctionCall.Arguments), &arguments)
@@ -61,7 +53,8 @@ func (r *BaiduStreamResult) Read() (ZhimaChatCompletionResponse, error) {
 	return ZhimaChatCompletionResponse{
 		Result:            res.Result,
 		ReasoningContent:  res.ReasoningContent,
-		FunctionToolCalls: functionToolCalls,
+		ToolCalls:         toolCalls,
+		FunctionToolCalls: toolCalls.FunctionToolCalls(),
 		PromptToken:       res.Usage.PromptTokens,
 		CompletionToken:   res.Usage.CompletionTokens,
 	}, nil

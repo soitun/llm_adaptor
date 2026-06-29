@@ -4,7 +4,7 @@ package basics
 
 type MessageOther struct {
 	Name             string         `json:"name,omitempty"`
-	ToolCalls        []ToolCall     `json:"tool_calls,omitempty"`
+	ToolCalls        ToolCalls      `json:"tool_calls,omitempty"`
 	ToolCallID       string         `json:"tool_call_id,omitempty"`
 	ToolName         string         `json:"tool_name,omitempty"`
 	ResponseMeta     *ResponseMeta  `json:"response_meta,omitempty"`
@@ -20,19 +20,6 @@ const (
 	System    RoleType = "system"
 	Tool      RoleType = "tool"
 )
-
-type ToolCall struct {
-	Index    *int           `json:"index,omitempty"`
-	ID       string         `json:"id"`
-	Type     string         `json:"type"`
-	Function FunctionCall   `json:"function"`
-	Extra    map[string]any `json:"extra,omitempty"`
-}
-
-type FunctionCall struct {
-	Name      string `json:"name,omitempty"`
-	Arguments string `json:"arguments,omitempty"`
-}
 
 type ResponseMeta struct {
 	FinishReason string      `json:"finish_reason,omitempty"`
