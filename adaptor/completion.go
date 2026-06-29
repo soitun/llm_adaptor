@@ -129,7 +129,13 @@ type ZhimaChatCompletionResponse struct {
 
 type FunctionToolCall = basics.FunctionToolCall
 
-func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (ZhimaChatCompletionResponse, error) {
+func (a *Adaptor) CreateChatCompletion(req ZhimaChatCompletionRequest) (resp ZhimaChatCompletionResponse, err error) {
+	defer func() {
+		if err == nil {
+			resp = normalizeThinkTaggedResponse(resp)
+		}
+	}()
+
 	if len(req.Messages) == 0 {
 		return ZhimaChatCompletionResponse{}, errors.New("messages is required")
 	}
